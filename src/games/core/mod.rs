@@ -2,7 +2,8 @@
 pub struct GameCore {
     phase: Phase,
     round: u16,
-    players: Vec<Player>
+    players: Vec<Player>,
+    active_player_key: Option<String>
 }
 
 #[derive(Debug, PartialEq)]
@@ -26,7 +27,8 @@ impl GameCore {
         GameCore {
             phase: Phase::Boot,
             round: 0,
-            players: Vec::new()
+            players: Vec::new(),
+            active_player_key: None
         }
     }
 
@@ -54,6 +56,7 @@ impl GameCore {
         self.phase = Phase::Boot;
         self.round = 0;
         self.players.truncate(0);
+        self.active_player_key = None;
 
         self
     }
@@ -66,6 +69,15 @@ impl GameCore {
                 socket_id: String::from(socket_id) 
             }
         );
+        if self.players.len() == 1 {
+            self.active_player_key = Some(String::from(key));
+        }
+
+        self
+    }
+
+    pub fn set_active_player(mut self, key: &str) -> GameCore {
+        self.active_player_key = Some(String::from(key));
 
         self
     }

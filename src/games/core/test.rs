@@ -48,3 +48,17 @@ fn add_players() {
     assert_eq!(game.players[0].name.as_str(), "name");
     assert_eq!(game.players[0].socket_id.as_str(), "socket_id");
 }
+
+#[test]
+fn active_player() {
+    let mut game = GameCore::new();
+    assert_eq!(game.players.len(), 0);
+    assert_eq!(game.active_player_key, None);
+    game = game.add_player("key1", "name1", "socket_id1").add_player("key2", "name2", "socket_id2");
+    assert_eq!(game.players.len(), 2);
+    assert_eq!(game.active_player_key, Some(String::from("key1")));
+    game = game.set_active_player("key2");
+    assert_eq!(game.active_player_key, Some(String::from("key2")));
+    game = game.reset();
+    assert_eq!(game.active_player_key, None);
+}
