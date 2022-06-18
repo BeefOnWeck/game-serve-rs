@@ -1,4 +1,4 @@
-
+#[derive(Debug, PartialEq)]
 pub struct GameCore {
     phase: Phase,
     round: u16,
@@ -33,7 +33,7 @@ impl GameCore {
     }
 
     /// For progressing the phase of the game
-    pub fn next_phase(mut self) -> GameCore {
+    pub fn next_phase(&mut self) -> &mut GameCore {
         self.phase = match self.phase {
             Phase::Boot => Phase::Setup,
             Phase::Setup => Phase::Play,
@@ -45,14 +45,14 @@ impl GameCore {
     }
 
     /// For moving the game to the next round
-    pub fn next_round(mut self) -> GameCore {
+    pub fn next_round(&mut self) -> &mut GameCore {
         self.round += 1;
 
         self
     }
 
     /// For resetting the game to the initial state
-    pub fn reset(mut self) -> GameCore {
+    pub fn reset(&mut self) -> &mut GameCore {
         self.phase = Phase::Boot;
         self.round = 0;
         self.players.truncate(0);
@@ -61,7 +61,7 @@ impl GameCore {
         self
     }
 
-    pub fn add_player(mut self, key: &str, name: &str, socket_id: &str) -> GameCore {
+    pub fn add_player(&mut self, key: &str, name: &str, socket_id: &str) -> &mut GameCore {
         self.players.push(
             Player { 
                 key: String::from(key), 
@@ -76,10 +76,17 @@ impl GameCore {
         self
     }
 
-    pub fn set_active_player(mut self, key: &str) -> GameCore {
-        self.active_player_key = Some(String::from(key));
-
-        self
+    pub fn set_active_player(&mut self, key: &str) -> Result<&mut GameCore, &'static str> {
+        let pki: Vec<_> = self.players.iter().filter(|p| p.key.as_str() == key).collect();
+        match pki.len() {
+            0 => Err("Player key not found!"),
+            1 => {
+                self.active_player_key = Some(String::from(key));
+                Ok(self)
+            },
+            _ => Err("Non-unique player key found!")
+        }
+       
     }
 }
 
