@@ -28,11 +28,14 @@ fn keep_track_of_round() {
 fn reset_the_game() {
     let mut game = GameCore::new();
     game = game.next_phase().next_phase().next_round();
+    game = game.add_player("key", "name", "socket_id");
     assert_eq!(game.phase, Phase::Play);
     assert_eq!(game.round, 1);
+    assert_eq!(game.players.len(), 1);
     game = game.reset();
     assert_eq!(game.phase, Phase::Boot);
     assert_eq!(game.round, 0);
+    assert_eq!(game.players.len(), 0);
 }
 
 #[test]

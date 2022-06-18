@@ -51,7 +51,9 @@ impl GameCore {
 
     /// For resetting the game to the initial state
     pub fn reset(mut self) -> GameCore {
-        self = GameCore::new();
+        self.phase = Phase::Boot;
+        self.round = 0;
+        self.players.truncate(0);
 
         self
     }
