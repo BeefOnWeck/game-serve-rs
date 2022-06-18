@@ -1,7 +1,8 @@
 
 pub struct GameCore {
     phase: Phase,
-    round: u16
+    round: u16,
+    players: Vec<Player>
 }
 
 #[derive(Debug, PartialEq)]
@@ -12,12 +13,20 @@ enum Phase {
     End,
 }
 
+#[derive(Debug, PartialEq)]
+struct Player {
+    key: String,
+    name: String,
+    socket_id: String
+}
+
 impl GameCore {
     /// GameCore constructor
     pub fn new() -> GameCore {
         GameCore {
             phase: Phase::Boot,
-            round: 0
+            round: 0,
+            players: Vec::new()
         }
     }
 
@@ -43,6 +52,18 @@ impl GameCore {
     /// For resetting the game to the initial state
     pub fn reset(mut self) -> GameCore {
         self = GameCore::new();
+
+        self
+    }
+
+    pub fn add_player(mut self, key: &str, name: &str, socket_id: &str) -> GameCore {
+        self.players.push(
+            Player { 
+                key: String::from(key), 
+                name: String::from(name), 
+                socket_id: String::from(socket_id) 
+            }
+        );
 
         self
     }

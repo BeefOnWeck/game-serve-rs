@@ -34,3 +34,14 @@ fn reset_the_game() {
     assert_eq!(game.phase, Phase::Boot);
     assert_eq!(game.round, 0);
 }
+
+#[test]
+fn add_players() {
+    let mut game = GameCore::new();
+    assert_eq!(game.players.len(), 0);
+    game = game.add_player("key", "name", "socket_id");
+    assert_eq!(game.players.len(), 1);
+    assert_eq!(game.players[0].key.as_str(), "key");
+    assert_eq!(game.players[0].name.as_str(), "name");
+    assert_eq!(game.players[0].socket_id.as_str(), "socket_id");
+}
