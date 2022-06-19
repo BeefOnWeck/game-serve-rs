@@ -60,10 +60,29 @@ fn active_player() {
     game.set_active_player("key2").unwrap(); // NOTE: Using unwrap() because function returns a Result
     // println!("{:?}", game);
     assert_eq!(game.active_player_key, Some(String::from("key2")));
-    let attempt = game.set_active_player("not_a_valid_key");
+    let attempt = game.set_active_player("not_a_valid_key"); // NOTE: No unwrap() to avoid a panic
     // println!("{:?}", attempt);
     assert_eq!(attempt, Err("Player key not found!"));
     game.reset();
     assert_eq!(game.active_player_key, None);
 }
 
+#[test]
+fn next_player() {
+    let mut game = GameCore::new();
+    game
+        .add_player("key1", "name1", "socket_id1")
+        .add_player("key2", "name2", "socket_id2")
+        .add_player("key3", "name3", "socket_id3")
+        .add_player("key4", "name4", "socket_id4");
+    assert_eq!(game.num_players, 4);
+    assert_eq!(game.active_player_key, Some(String::from("key1")));
+    game.next_player().unwrap(); // NOTE: Using unwrap() because function returns a Result
+    assert_eq!(game.active_player_key, Some(String::from("key2")));
+    game.next_player().unwrap();
+    assert_eq!(game.active_player_key, Some(String::from("key3")));
+    game.next_player().unwrap();
+    assert_eq!(game.active_player_key, Some(String::from("key4")));
+    game.next_player().unwrap();
+    assert_eq!(game.active_player_key, Some(String::from("key1")));
+}

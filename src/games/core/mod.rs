@@ -1,9 +1,11 @@
+
 #[derive(Debug, PartialEq)]
 pub struct GameCore {
     phase: Phase,
     round: u16,
     players: Vec<Player>,
-    active_player_key: Option<String>
+    active_player_key: Option<String>,
+    num_players: usize
 }
 
 #[derive(Debug, PartialEq)]
@@ -28,7 +30,8 @@ impl GameCore {
             phase: Phase::Boot,
             round: 0,
             players: Vec::new(),
-            active_player_key: None
+            active_player_key: None,
+            num_players: 0
         }
     }
 
@@ -57,6 +60,7 @@ impl GameCore {
         self.round = 0;
         self.players.truncate(0);
         self.active_player_key = None;
+        self.num_players = 0;
 
         self
     }
@@ -72,6 +76,7 @@ impl GameCore {
         if self.players.len() == 1 {
             self.active_player_key = Some(String::from(key));
         }
+        self.num_players += 1;
 
         self
     }
@@ -85,8 +90,20 @@ impl GameCore {
                 Ok(self)
             },
             _ => Err("Non-unique player key found!")
+        }  
+    }
+    
+    pub fn next_player(&mut self) -> Result<&mut GameCore, &'static str> {
+        let active_player_key = self.active_player_key.clone().unwrap();
+        let active_player_index = self.players.iter().position(|p| p.key == active_player_key);
+        match active_player_index {
+            Some(idx) => {
+                let next_player_index = (idx + 1) % self.num_players;
+                self.active_player_key = Some(self.players[next_player_index].key.clone());
+                Ok(self)
+            },
+            None => Err("Cannot index of active player!")
         }
-       
     }
 }
 
