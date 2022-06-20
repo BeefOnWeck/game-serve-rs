@@ -86,3 +86,46 @@ fn next_player() {
     game.next_player().unwrap();
     assert_eq!(game.active_player_key, Some(String::from("key1")));
 }
+
+#[test]
+fn game_status() {
+    let mut game = Core::new();
+    game.next_phase().next_phase().next_round();
+    game
+        .add_player("key1", "name1", "socket_id1")
+        .add_player("key2", "name2", "socket_id2")
+        .add_player("key3", "name3", "socket_id3")
+        .add_player("key4", "name4", "socket_id4");
+    let game_status = game.get_game_status();
+    assert_eq!(
+        game_status,
+        Core {
+            phase: Phase::Play,
+            round: 1,
+            players: vec![
+                Player { 
+                    key: String::from("key1"), 
+                    name: String::from("name1"), 
+                    socket_id: String::from("socket_id1") 
+                },
+                Player { 
+                    key: String::from("key2"),
+                    name: String::from("name2"),
+                    socket_id: String::from("socket_id2")
+                },
+                Player { 
+                    key: String::from("key3"),
+                    name: String::from("name3"),
+                    socket_id: String::from("socket_id3")
+                },
+                Player { 
+                    key: String::from("key4"),
+                    name: String::from("name4"),
+                    socket_id: String::from("socket_id4")
+                }
+            ],
+            active_player_key: Some(String::from("key1")),
+            num_players: 4
+        }
+    )
+}

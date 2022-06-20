@@ -11,7 +11,7 @@ struct Core {
     num_players: usize
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 enum Phase {
     Boot,
     Setup,
@@ -19,7 +19,7 @@ enum Phase {
     End,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 struct Player {
     key: String,
     name: String,
@@ -106,6 +106,16 @@ impl Game for Core {
                 Ok(self)
             },
             None => Err("Cannot index of active player!")
+        }
+    }
+
+    fn get_game_status(&self) -> Core {
+        Core { 
+            phase: self.phase.clone(), 
+            round: self.round.clone(), 
+            players: self.players.clone(), 
+            active_player_key: self.active_player_key.clone(), 
+            num_players: self.num_players.clone()
         }
     }
 }

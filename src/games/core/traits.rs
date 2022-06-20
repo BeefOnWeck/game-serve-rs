@@ -7,4 +7,5 @@ pub trait Game {
     fn add_player(&mut self, key: &str, name: &str, socket_id: &str) -> &mut Self;
     fn set_active_player(&mut self, key: &str) -> Result<&mut Self, &'static str>;
     fn next_player(&mut self) -> Result<&mut Self, &'static str>;
+    fn get_game_status(&self) -> Self;
 }
