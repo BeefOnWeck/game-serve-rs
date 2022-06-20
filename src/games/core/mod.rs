@@ -1,4 +1,3 @@
-
 mod traits;
 use traits::Game;
 
@@ -8,7 +7,8 @@ struct Core {
     round: u16,
     players: Vec<Player>,
     active_player_key: Option<String>,
-    num_players: usize
+    num_players: usize,
+    possible_actions: PossibleActions
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -26,7 +26,19 @@ struct Player {
     socket_id: String
 }
 
+#[derive(Clone, Debug, PartialEq)]
+enum PossibleActions {
+    None
+}
+
+struct CoreCommand {
+    action: PossibleActions
+}
+
 impl Game for Core {
+    type Status = Core;
+    type Command = CoreCommand;
+
     /// Core constructor
     fn new() -> Core {
         Core {
@@ -34,7 +46,8 @@ impl Game for Core {
             round: 0,
             players: Vec::new(),
             active_player_key: None,
-            num_players: 0
+            num_players: 0,
+            possible_actions: PossibleActions::None
         }
     }
 
@@ -111,11 +124,21 @@ impl Game for Core {
 
     fn get_game_status(&self) -> Core {
         Core { 
-            phase: self.phase.clone(), 
-            round: self.round.clone(), 
-            players: self.players.clone(), 
-            active_player_key: self.active_player_key.clone(), 
-            num_players: self.num_players.clone()
+            phase: self.phase.clone(),
+            round: self.round.clone(),
+            players: self.players.clone(),
+            active_player_key: self.active_player_key.clone(),
+            num_players: self.num_players.clone(),
+            possible_actions: self.possible_actions.clone()
+        }
+    }
+
+    fn process_action(&mut self, command: Self::Command) -> Result<&mut Core, &'static str> {
+        match self.phase {
+            Phase::Setup | Phase::Play => match command.action {
+                PossibleActions::None => Ok(self)
+            },
+            _ => Err("Can only take action during the Setup or Play phases!")
         }
     }
 }

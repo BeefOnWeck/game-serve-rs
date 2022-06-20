@@ -125,7 +125,28 @@ fn game_status() {
                 }
             ],
             active_player_key: Some(String::from("key1")),
-            num_players: 4
+            num_players: 4,
+            possible_actions: PossibleActions::None
         }
     )
+}
+
+#[test]
+fn process_actions() {
+    let mut game = Core::new();
+    let command = CoreCommand {
+        action: PossibleActions::None
+    };
+    let attempt = game.process_action(command);
+    assert_eq!(attempt, Err("Can only take action during the Setup or Play phases!"));
+    game.next_phase().next_phase();
+    let command = CoreCommand {
+        action: PossibleActions::None
+    };
+    let attempt = game.process_action(command);
+    let mut expected_result = Core { phase: Phase::Play, round: 0, players: [].to_vec(), active_player_key: None, num_players: 0, possible_actions: PossibleActions::None };
+    assert_eq!(
+        attempt,
+        Ok(&mut expected_result)
+    );
 }
