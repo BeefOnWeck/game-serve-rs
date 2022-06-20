@@ -2,6 +2,7 @@
 pub trait Game {
     type Status;
     type Command;
+    type Config;
 
     fn new() -> Self;
     fn next_phase(&mut self) -> &mut Self;
@@ -12,4 +13,5 @@ pub trait Game {
     fn next_player(&mut self) -> Result<&mut Self, &'static str>;
     fn get_game_status(&self) -> Self::Status;
     fn process_action(&mut self, command: Self::Command) -> Result<&mut Self, &'static str>;
+    fn configure_game(&mut self, config: Self::Config) -> Result<&mut Self, &'static str>;
 }

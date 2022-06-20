@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 mod traits;
 use traits::Game;
 
@@ -8,7 +10,8 @@ struct Core {
     players: Vec<Player>,
     active_player_key: Option<String>,
     num_players: usize,
-    possible_actions: PossibleActions
+    possible_actions: PossibleActions,
+    config: HashMap<String, CoreConfigType>
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -35,9 +38,15 @@ struct CoreCommand {
     action: PossibleActions
 }
 
+#[derive(Clone, Debug, PartialEq)]
+enum CoreConfigType {
+    Int(i32)
+}
+
 impl Game for Core {
     type Status = Core;
     type Command = CoreCommand;
+    type Config = HashMap<String, CoreConfigType>;
 
     /// Core constructor
     fn new() -> Core {
@@ -47,7 +56,8 @@ impl Game for Core {
             players: Vec::new(),
             active_player_key: None,
             num_players: 0,
-            possible_actions: PossibleActions::None
+            possible_actions: PossibleActions::None,
+            config: HashMap::new()
         }
     }
 
@@ -129,7 +139,8 @@ impl Game for Core {
             players: self.players.clone(),
             active_player_key: self.active_player_key.clone(),
             num_players: self.num_players.clone(),
-            possible_actions: self.possible_actions.clone()
+            possible_actions: self.possible_actions.clone(),
+            config: self.config.clone()
         }
     }
 
@@ -139,6 +150,16 @@ impl Game for Core {
                 PossibleActions::None => Ok(self)
             },
             _ => Err("Can only take action during the Setup or Play phases!")
+        }
+    }
+
+    fn configure_game(&mut self, config: Self::Config) -> Result<&mut Self, &'static str> {
+        match self.phase {
+            Phase::Boot => {
+                self.config = config;
+                Ok(self)
+            },
+            _ => Err("Cannot configure game outside of boot phase!")
         }
     }
 }

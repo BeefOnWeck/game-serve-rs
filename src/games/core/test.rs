@@ -126,7 +126,8 @@ fn game_status() {
             ],
             active_player_key: Some(String::from("key1")),
             num_players: 4,
-            possible_actions: PossibleActions::None
+            possible_actions: PossibleActions::None,
+            config: HashMap::new()
         }
     )
 }
@@ -144,9 +145,43 @@ fn process_actions() {
         action: PossibleActions::None
     };
     let attempt = game.process_action(command);
-    let mut expected_result = Core { phase: Phase::Play, round: 0, players: [].to_vec(), active_player_key: None, num_players: 0, possible_actions: PossibleActions::None };
+    let mut expected_result = Core { phase: Phase::Play, round: 0, players: [].to_vec(), active_player_key: None, num_players: 0, possible_actions: PossibleActions::None, config: HashMap::new() };
     assert_eq!(
         attempt,
         Ok(&mut expected_result)
+    );
+}
+
+#[test]
+fn game_configuration() {
+    // Can set config during boot
+    let mut game = Core::new();
+    let mut config = HashMap::new();
+    config.insert(String::from("config_num_players"), CoreConfigType::Int(2));
+    let config_copy = config.clone();
+    let attempt = game.configure_game(config);
+    let mut expected_result = Core { 
+        phase: Phase::Boot, 
+        round: 0, 
+        players: [].to_vec(), 
+        active_player_key: None, 
+        num_players: 0, 
+        possible_actions: PossibleActions::None, 
+        config: config_copy 
+    };
+    assert_eq!(
+        attempt,
+        Ok(&mut expected_result)
+    );
+
+    // Cannot set config outside of boot
+    let mut game = Core::new();
+    let mut config = HashMap::new();
+    config.insert(String::from("config_num_players"), CoreConfigType::Int(2));
+    game.next_phase();
+    let attempt = game.configure_game(config);
+    assert_eq!(
+        attempt,
+        Err("Cannot configure game outside of boot phase!")
     );
 }
