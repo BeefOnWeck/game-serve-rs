@@ -1,18 +1,7 @@
 use std::collections::HashMap;
 
-mod traits;
+pub mod traits;
 use traits::Game;
-
-#[derive(Debug, PartialEq)]
-pub struct Core {
-    phase: Phase,
-    round: u16,
-    players: Vec<Player>,
-    active_player_key: Option<String>,
-    num_players: usize,
-    possible_actions: PossibleActions,
-    config: HashMap<String, CoreConfigType>
-}
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum Phase {
@@ -22,11 +11,81 @@ pub enum Phase {
     End,
 }
 
+impl Phase {
+    fn next_phase(&mut self) {
+        *self = match *self {
+            Phase::Boot => Phase::Setup,
+            Phase::Setup => Phase::Play,
+            Phase::Play => Phase::End,
+            Phase::End => Phase::End
+        }
+    }
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct Player {
     key: String,
     name: String,
     socket_id: String
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct Players {
+    list: Vec<Player>,
+    active_key: Option<String>,
+    cardinality: usize
+}
+
+impl Players {
+
+    fn add_player(&mut self, key: &str, name: &str, socket_id: &str) -> &mut Players {
+        self.list.push(
+            Player { 
+                key: String::from(key), 
+                name: String::from(name), 
+                socket_id: String::from(socket_id) 
+            }
+        );
+        if self.list.len() == 1 {
+            self.active_key = Some(String::from(key));
+        }
+        self.cardinality += 1;
+
+        self
+    }
+
+    fn set_active_player(&mut self, key: &str) -> Result<&mut Players, &'static str> {
+        let pki: Vec<_> = self.list.iter().filter(|p| p.key.as_str() == key).collect();
+        match pki.len() {
+            0 => Err("Player key not found!"),
+            1 => {
+                self.active_key = Some(String::from(key));
+                Ok(self)
+            },
+            _ => Err("Non-unique player key found!")
+        }  
+    }
+    
+    fn next_player(&mut self) -> Result<&mut Players, &'static str> {
+        let active_key = self.active_key.clone().unwrap();
+        let active_player_index = self.list.iter().position(|p| p.key == active_key);
+        match active_player_index {
+            Some(idx) => {
+                let next_player_index = (idx + 1) % self.cardinality;
+                self.active_key = Some(self.list[next_player_index].key.clone());
+                Ok(self)
+            },
+            None => Err("Cannot index of active player!")
+        }
+    }
+
+    fn reset(&mut self) -> &mut Players {
+        self.list.truncate(0);
+        self.active_key = None;
+        self.cardinality = 0;
+
+        self
+    }
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -43,6 +102,15 @@ pub enum CoreConfigType {
     Int(i32)
 }
 
+#[derive(Debug, PartialEq)]
+pub struct Core {
+    phase: Phase,
+    round: u16,
+    players: Players,
+    possible_actions: PossibleActions,
+    config: HashMap<String, CoreConfigType>
+}
+
 impl Game for Core {
     type Status = Core;
     type Command = CoreCommand;
@@ -53,9 +121,11 @@ impl Game for Core {
         Core {
             phase: Phase::Boot,
             round: 0,
-            players: Vec::new(),
-            active_player_key: None,
-            num_players: 0,
+            players: Players {
+                list: Vec::new(),
+                active_key: None,
+                cardinality: 0
+            },
             possible_actions: PossibleActions::None,
             config: HashMap::new()
         }
@@ -63,12 +133,7 @@ impl Game for Core {
 
     /// For progressing the phase of the game
     fn next_phase(&mut self) -> &mut Core {
-        self.phase = match self.phase {
-            Phase::Boot => Phase::Setup,
-            Phase::Setup => Phase::Play,
-            Phase::Play => Phase::End,
-            Phase::End => Phase::End
-        };
+        self.phase.next_phase();
 
         self
     }
@@ -84,51 +149,28 @@ impl Game for Core {
     fn reset(&mut self) -> &mut Core {
         self.phase = Phase::Boot;
         self.round = 0;
-        self.players.truncate(0);
-        self.active_player_key = None;
-        self.num_players = 0;
+        self.players.reset();
 
         self
     }
 
     fn add_player(&mut self, key: &str, name: &str, socket_id: &str) -> &mut Core {
-        self.players.push(
-            Player { 
-                key: String::from(key), 
-                name: String::from(name), 
-                socket_id: String::from(socket_id) 
-            }
-        );
-        if self.players.len() == 1 {
-            self.active_player_key = Some(String::from(key));
-        }
-        self.num_players += 1;
+        self.players.add_player(key, name, socket_id);
 
         self
     }
 
     fn set_active_player(&mut self, key: &str) -> Result<&mut Core, &'static str> {
-        let pki: Vec<_> = self.players.iter().filter(|p| p.key.as_str() == key).collect();
-        match pki.len() {
-            0 => Err("Player key not found!"),
-            1 => {
-                self.active_player_key = Some(String::from(key));
-                Ok(self)
-            },
-            _ => Err("Non-unique player key found!")
-        }  
+        match self.players.set_active_player(key) {
+            Ok(_) => Ok(self),
+            Err(e) => Err(e)
+        }
     }
     
     fn next_player(&mut self) -> Result<&mut Core, &'static str> {
-        let active_player_key = self.active_player_key.clone().unwrap();
-        let active_player_index = self.players.iter().position(|p| p.key == active_player_key);
-        match active_player_index {
-            Some(idx) => {
-                let next_player_index = (idx + 1) % self.num_players;
-                self.active_player_key = Some(self.players[next_player_index].key.clone());
-                Ok(self)
-            },
-            None => Err("Cannot index of active player!")
+        match self.players.next_player() {
+            Ok(_) => Ok(self),
+            Err(e) => Err(e)
         }
     }
 
@@ -137,8 +179,6 @@ impl Game for Core {
             phase: self.phase.clone(),
             round: self.round.clone(),
             players: self.players.clone(),
-            active_player_key: self.active_player_key.clone(),
-            num_players: self.num_players.clone(),
             possible_actions: self.possible_actions.clone(),
             config: self.config.clone()
         }
