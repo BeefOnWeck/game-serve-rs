@@ -4,7 +4,7 @@ mod traits;
 use traits::Game;
 
 #[derive(Debug, PartialEq)]
-struct Core {
+pub struct Core {
     phase: Phase,
     round: u16,
     players: Vec<Player>,
@@ -15,7 +15,7 @@ struct Core {
 }
 
 #[derive(Clone, Debug, PartialEq)]
-enum Phase {
+pub enum Phase {
     Boot,
     Setup,
     Play,
@@ -23,23 +23,23 @@ enum Phase {
 }
 
 #[derive(Clone, Debug, PartialEq)]
-struct Player {
+pub struct Player {
     key: String,
     name: String,
     socket_id: String
 }
 
 #[derive(Clone, Debug, PartialEq)]
-enum PossibleActions {
+pub enum PossibleActions {
     None
 }
 
-struct CoreCommand {
+pub struct CoreCommand {
     action: PossibleActions
 }
 
 #[derive(Clone, Debug, PartialEq)]
-enum CoreConfigType {
+pub enum CoreConfigType {
     Int(i32)
 }
 
