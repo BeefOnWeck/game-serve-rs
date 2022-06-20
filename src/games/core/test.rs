@@ -2,7 +2,7 @@ use super::*;
 
 #[test]
 fn keep_track_of_phase() {
-    let mut game = GameCore::new();
+    let mut game = Core::new();
     assert_eq!(game.phase, Phase::Boot);
     game.next_phase();
     assert_eq!(game.phase, Phase::Setup);
@@ -16,7 +16,7 @@ fn keep_track_of_phase() {
 
 #[test]
 fn keep_track_of_round() {
-    let mut game = GameCore::new();
+    let mut game = Core::new();
     assert_eq!(game.round, 0);
     game.next_round();
     assert_eq!(game.round, 1);
@@ -26,7 +26,7 @@ fn keep_track_of_round() {
 
 #[test]
 fn reset_the_game() {
-    let mut game = GameCore::new();
+    let mut game = Core::new();
     game.next_phase().next_phase().next_round();
     game.add_player("key", "name", "socket_id");
     assert_eq!(game.phase, Phase::Play);
@@ -40,7 +40,7 @@ fn reset_the_game() {
 
 #[test]
 fn add_players() {
-    let mut game = GameCore::new();
+    let mut game = Core::new();
     assert_eq!(game.players.len(), 0);
     game.add_player("key", "name", "socket_id");
     assert_eq!(game.players.len(), 1);
@@ -51,7 +51,7 @@ fn add_players() {
 
 #[test]
 fn active_player() {
-    let mut game = GameCore::new();
+    let mut game = Core::new();
     assert_eq!(game.players.len(), 0);
     assert_eq!(game.active_player_key, None);
     game.add_player("key1", "name1", "socket_id1").add_player("key2", "name2", "socket_id2");
@@ -69,7 +69,7 @@ fn active_player() {
 
 #[test]
 fn next_player() {
-    let mut game = GameCore::new();
+    let mut game = Core::new();
     game
         .add_player("key1", "name1", "socket_id1")
         .add_player("key2", "name2", "socket_id2")

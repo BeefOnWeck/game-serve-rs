@@ -1,6 +1,9 @@
 
+mod traits;
+use traits::Game;
+
 #[derive(Debug, PartialEq)]
-pub struct GameCore {
+struct Core {
     phase: Phase,
     round: u16,
     players: Vec<Player>,
@@ -23,10 +26,10 @@ struct Player {
     socket_id: String
 }
 
-impl GameCore {
-    /// GameCore constructor
-    pub fn new() -> GameCore {
-        GameCore {
+impl Game for Core {
+    /// Core constructor
+    fn new() -> Core {
+        Core {
             phase: Phase::Boot,
             round: 0,
             players: Vec::new(),
@@ -36,7 +39,7 @@ impl GameCore {
     }
 
     /// For progressing the phase of the game
-    pub fn next_phase(&mut self) -> &mut GameCore {
+    fn next_phase(&mut self) -> &mut Core {
         self.phase = match self.phase {
             Phase::Boot => Phase::Setup,
             Phase::Setup => Phase::Play,
@@ -48,14 +51,14 @@ impl GameCore {
     }
 
     /// For moving the game to the next round
-    pub fn next_round(&mut self) -> &mut GameCore {
+    fn next_round(&mut self) -> &mut Core {
         self.round += 1;
 
         self
     }
 
     /// For resetting the game to the initial state
-    pub fn reset(&mut self) -> &mut GameCore {
+    fn reset(&mut self) -> &mut Core {
         self.phase = Phase::Boot;
         self.round = 0;
         self.players.truncate(0);
@@ -65,7 +68,7 @@ impl GameCore {
         self
     }
 
-    pub fn add_player(&mut self, key: &str, name: &str, socket_id: &str) -> &mut GameCore {
+    fn add_player(&mut self, key: &str, name: &str, socket_id: &str) -> &mut Core {
         self.players.push(
             Player { 
                 key: String::from(key), 
@@ -81,7 +84,7 @@ impl GameCore {
         self
     }
 
-    pub fn set_active_player(&mut self, key: &str) -> Result<&mut GameCore, &'static str> {
+    fn set_active_player(&mut self, key: &str) -> Result<&mut Core, &'static str> {
         let pki: Vec<_> = self.players.iter().filter(|p| p.key.as_str() == key).collect();
         match pki.len() {
             0 => Err("Player key not found!"),
@@ -93,7 +96,7 @@ impl GameCore {
         }  
     }
     
-    pub fn next_player(&mut self) -> Result<&mut GameCore, &'static str> {
+    fn next_player(&mut self) -> Result<&mut Core, &'static str> {
         let active_player_key = self.active_player_key.clone().unwrap();
         let active_player_index = self.players.iter().position(|p| p.key == active_player_key);
         match active_player_index {
