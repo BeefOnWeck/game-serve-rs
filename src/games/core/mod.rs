@@ -31,13 +31,12 @@ pub struct Player {
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Players {
-    list: Vec<Player>,
-    active_key: Option<String>,
-    cardinality: usize
+    pub list: Vec<Player>,
+    pub active_key: Option<String>,
+    pub cardinality: usize
 }
 
 impl Players {
-
     fn add_player(&mut self, key: &str, name: &str, socket_id: &str) -> &mut Players {
         self.list.push(
             Player { 
