@@ -37,6 +37,14 @@ pub struct Players {
 }
 
 impl Players {
+    pub fn new() -> Players {
+        Players { 
+            list: Vec::new(), 
+            active_key: None, 
+            cardinality: 0
+        }
+    }
+
     fn add_player(&mut self, key: &str, name: &str, socket_id: &str) -> &mut Players {
         self.list.push(
             Player { 
@@ -120,11 +128,7 @@ impl Game for Core {
         Core {
             phase: Phase::Boot,
             round: 0,
-            players: Players {
-                list: Vec::new(),
-                active_key: None,
-                cardinality: 0
-            },
+            players: Players::new(),
             possible_actions: PossibleActions::None,
             config: HashMap::new()
         }

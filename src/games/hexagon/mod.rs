@@ -102,11 +102,7 @@ impl HexagonIsland {
         HexagonIsland {
             phase: Phase::Boot,
             round: 0,
-            players: Players {
-                list: Vec::new(),
-                active_key: None,
-                cardinality: 0
-            },
+            players: Players::new(),
             possible_actions: PossibleActions::None,
             config: HashMap::new(),
             state: HexagonState::new()
