@@ -74,6 +74,8 @@ impl Players {
     }
     
     fn next_player(&mut self) -> Result<&mut Players, &'static str> {
+        // TODO: Consider rewriting using iterators and cycle()
+        // https://stackoverflow.com/questions/47838596/how-do-i-have-a-structs-field-be-an-iterator-over-t-elements
         let active_key = self.active_key.clone().unwrap();
         let active_player_index = self.list.iter().position(|p| p.key == active_key);
         match active_player_index {
