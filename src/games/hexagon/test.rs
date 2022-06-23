@@ -20,10 +20,10 @@ fn initial_state() {
                 nodes: Vec::new(), 
                 hexagons: Vec::new(), 
                 roads: Vec::new(), 
-                rollResult: (0,0), 
-                playerResources: HashMap::new(), 
+                roll_result: (0,0), 
+                player_resources: HashMap::new(), 
                 bugs: HashMap::new(), 
-                scorpionIndex: None
+                scorpion_index: None
             }
         }
     )
@@ -33,7 +33,7 @@ fn initial_state() {
 fn board_setup() {
     let game = HexagonIsland::new();
     let mut config = HashMap::new();
-    config.insert(String::from("config_cardinality"), CoreConfigType::Int(2));
-    game.configure_game(config).unwrap();
-    game.setup(3);
+    config.insert(String::from("config_num_players"), CoreConfigType::Int(2));
+    // game.configure_game(config).unwrap();
+    // game.setup(3);
 }

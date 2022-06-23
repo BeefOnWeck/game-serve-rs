@@ -1,4 +1,5 @@
 use super::*;
+use actors::Player;
 
 #[test]
 fn keep_track_of_phase() {
@@ -169,7 +170,7 @@ fn game_configuration() {
     // Can set config during boot
     let mut game = Core::new();
     let mut config = HashMap::new();
-    config.insert(String::from("config_cardinality"), CoreConfigType::Int(2));
+    config.insert(String::from("config_num_players"), CoreConfigType::Int(2));
     let config_copy = config.clone();
     let attempt = game.configure_game(config);
     let mut expected_result = Core { 
@@ -191,7 +192,7 @@ fn game_configuration() {
     // Cannot set config outside of boot
     let mut game = Core::new();
     let mut config = HashMap::new();
-    config.insert(String::from("config_cardinality"), CoreConfigType::Int(2));
+    config.insert(String::from("config_num_players"), CoreConfigType::Int(2));
     game.next_phase();
     let attempt = game.configure_game(config);
     assert_eq!(

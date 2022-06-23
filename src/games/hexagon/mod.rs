@@ -1,12 +1,12 @@
 use std::collections::HashMap;
 
 use crate::games::core::{
-    Players,
     Phase,
     PossibleActions,
-    CoreConfigType,
-    traits::Game
+    CoreConfigType
 };
+use crate::games::core::actors::Players;
+use crate::games::core::traits::Game;
 
 #[derive(Debug, PartialEq)]
 struct Coordinate {
@@ -66,10 +66,10 @@ struct HexagonState {
     nodes: Vec<Coordinate>,
     hexagons: Vec<Hexagon>,
     roads: Vec<(u32,u32)>,
-    rollResult: (u8,u8),
-    playerResources: HashMap<String, ResourceList>,
+    roll_result: (u8,u8),
+    player_resources: HashMap<String, ResourceList>,
     bugs: HashMap<String, u8>,
-    scorpionIndex: Option<u32>
+    scorpion_index: Option<u32>
 }
 
 impl HexagonState {
@@ -79,10 +79,10 @@ impl HexagonState {
             nodes: Vec::new(), 
             hexagons: Vec::new(), 
             roads: Vec::new(), 
-            rollResult: (0,0), 
-            playerResources: HashMap::new(), 
+            roll_result: (0,0), 
+            player_resources: HashMap::new(), 
             bugs: HashMap::new(), 
-            scorpionIndex: None
+            scorpion_index: None
         }
     }
 }
