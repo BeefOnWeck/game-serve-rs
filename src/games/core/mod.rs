@@ -15,7 +15,7 @@ pub enum Phase {
 }
 
 impl Phase {
-    fn next_phase(&mut self) {
+    pub fn next_phase(&mut self) {
         *self = match *self {
             Phase::Boot => Phase::Setup,
             Phase::Setup => Phase::Play,
@@ -31,7 +31,7 @@ pub enum PossibleActions {
 }
 
 pub struct CoreCommand {
-    action: PossibleActions
+    pub action: PossibleActions
 }
 
 #[derive(Clone, Debug, PartialEq)]
