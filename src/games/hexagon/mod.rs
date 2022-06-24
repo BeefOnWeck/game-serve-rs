@@ -95,19 +95,26 @@ struct HexagonIslandStatus {
 }
 
 #[derive(Debug, PartialEq)]
+struct HexagonIslandConfig {
+    num_players: u8,
+    score_to_win: u8,
+    game_board_width: u8
+}
+
+#[derive(Debug, PartialEq)]
 struct HexagonIsland {
     phase: Phase,
     round: u16,
     players: Players,
     possible_actions: PossibleActions,
-    config: HashMap<String, CoreConfigType>,
+    config: HexagonIslandConfig,
     state: HexagonState
 }
 
 impl Game for HexagonIsland {
     type Status = HexagonIslandStatus;
     type Command = CoreCommand;
-    type Config = HashMap<String, CoreConfigType>;
+    type Config = HexagonIslandConfig;
 
     fn new() -> HexagonIsland {
         HexagonIsland {
@@ -115,7 +122,11 @@ impl Game for HexagonIsland {
             round: 0,
             players: Players::new(),
             possible_actions: PossibleActions::None,
-            config: HashMap::new(),
+            config: HexagonIslandConfig {
+                num_players: 2,
+                score_to_win: 10,
+                game_board_width: 5
+            },
             state: HexagonState::new()
         }
     }
