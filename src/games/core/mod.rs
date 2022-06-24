@@ -3,8 +3,8 @@ use std::collections::HashMap;
 pub mod traits;
 use traits::Game;
 
-pub mod actors;
-use actors::Players;
+pub mod playe;
+use playe::Players;
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum Phase {

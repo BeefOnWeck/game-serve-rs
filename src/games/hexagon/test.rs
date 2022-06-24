@@ -19,16 +19,9 @@ fn initial_state() {
                 score_to_win: 10,
                 game_board_width: 5
             },
-            state: HexagonState { 
-                centroids: Vec::new(), 
-                nodes: Vec::new(), 
-                hexagons: Vec::new(), 
-                roads: Vec::new(), 
-                roll_result: (0,0), 
-                player_resources: HashMap::new(), 
-                bugs: HashMap::new(), 
-                scorpion_index: None
-            }
+            roll_result: (0,0), 
+            player_resources: HashMap::new(), 
+            board: GameBoard::new()
         }
     )
 }

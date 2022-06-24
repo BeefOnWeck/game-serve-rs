@@ -3,90 +3,16 @@ use std::collections::HashMap;
 use crate::games::core::{
     Phase,
     PossibleActions,
-    CoreConfigType,
     CoreCommand
 };
-use crate::games::core::actors::Players;
+use crate::games::core::playe::Players;
 use crate::games::core::traits::Game;
 
-#[derive(Debug, PartialEq)]
-struct Coordinate {
-    x: f64,
-    y: f64
-}
-
-impl Coordinate {
-    fn new() -> Coordinate {
-        Coordinate { x: 0.0, y: 0.0 }
-    }
-}
-
-#[derive(Debug, PartialEq)]
-struct Centroid {
-    loc: Coordinate,
-    number: u16
-}
-
-impl Centroid {
-    fn new() -> Centroid {
-        Centroid { 
-            loc: Coordinate::new(), 
-            number: 0
-        }
-    }
-}
-
-#[derive(Debug, PartialEq)]
-enum Resource {
-    Block,
-    Rock,
-    Timber,
-    Fiber,
-    Cereal
-}
-
-#[derive(Debug, PartialEq)]
-struct Hexagon {
-    vertices: Vec<Coordinate>,
-    number: u16,
-    resource: Resource
-}
-
-#[derive(Debug, PartialEq)]
-struct ResourceList {
-    block: u16,
-    rock: u16,
-    timber: u16,
-    fiber: u16,
-    cereal: u16
-}
-
-#[derive(Debug, PartialEq)]
-struct HexagonState {
-    centroids: Vec<Centroid>,
-    nodes: Vec<Coordinate>,
-    hexagons: Vec<Hexagon>,
-    roads: Vec<(u32,u32)>,
-    roll_result: (u8,u8),
-    player_resources: HashMap<String, ResourceList>,
-    bugs: HashMap<String, u8>,
-    scorpion_index: Option<u32>
-}
-
-impl HexagonState {
-    fn new() -> HexagonState {
-        HexagonState { 
-            centroids: Vec::new(), 
-            nodes: Vec::new(), 
-            hexagons: Vec::new(), 
-            roads: Vec::new(), 
-            roll_result: (0,0), 
-            player_resources: HashMap::new(), 
-            bugs: HashMap::new(), 
-            scorpion_index: None
-        }
-    }
-}
+mod board;
+use board::{
+    GameBoard,
+    ResourceList
+};
 
 struct HexagonIslandStatus {
     phase: Phase,
@@ -108,7 +34,9 @@ struct HexagonIsland {
     players: Players,
     possible_actions: PossibleActions,
     config: HexagonIslandConfig,
-    state: HexagonState
+    roll_result: (u8,u8),
+    player_resources: HashMap<String, ResourceList>,
+    board: GameBoard
 }
 
 impl Game for HexagonIsland {
@@ -127,7 +55,9 @@ impl Game for HexagonIsland {
                 score_to_win: 10,
                 game_board_width: 5
             },
-            state: HexagonState::new()
+            roll_result: (0,0), 
+            player_resources: HashMap::new(), 
+            board: GameBoard::new()
         }
     }
 

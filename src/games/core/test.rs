@@ -1,5 +1,5 @@
 use super::*;
-use actors::Player;
+use playe::Player;
 
 #[test]
 fn keep_track_of_phase() {
