@@ -59,5 +59,10 @@ fn board_setup() {
         game_board_width: 5
     };
     game.configure_game(config).unwrap();
-    // game.setup(3);
+    game.board.setup(5);
+
+    assert_eq!(game.board.centroids.len(), 19);
+    assert_eq!(game.board.hexagons.len(), 19);
+    assert_eq!(game.board.nodes.len(), 24);
+    assert_eq!(game.board.roads.len(), 30);
 }

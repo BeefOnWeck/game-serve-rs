@@ -1,7 +1,9 @@
 use std::collections::HashMap;
+use rand::thread_rng;
+use rand::seq::SliceRandom;
 
 #[derive(Debug, PartialEq)]
-struct Coordinate {
+pub struct Coordinate {
     x: f64,
     y: f64
 }
@@ -13,9 +15,9 @@ impl Coordinate {
 }
 
 #[derive(Debug, PartialEq)]
-struct Centroid {
+pub struct Centroid {
     loc: Coordinate,
-    number: u16
+    number: i16
 }
 
 impl Centroid {
@@ -33,13 +35,14 @@ enum Resource {
     Rock,
     Timber,
     Fiber,
-    Cereal
+    Cereal,
+    Desert
 }
 
 #[derive(Debug, PartialEq)]
-struct Hexagon {
+pub struct Hexagon {
     vertices: Vec<Coordinate>,
-    number: u16,
+    number: i16,
     resource: Resource
 }
 
@@ -54,12 +57,12 @@ pub struct ResourceList {
 
 #[derive(Debug, PartialEq)]
 pub struct GameBoard {
-    centroids: Vec<Centroid>,
-    nodes: Vec<Coordinate>,
-    hexagons: Vec<Hexagon>,
-    roads: Vec<(u32,u32)>,
-    bugs: HashMap<String, u8>,
-    scorpion_index: Option<u32>
+    pub centroids: Vec<Centroid>,
+    pub nodes: Vec<Coordinate>,
+    pub hexagons: Vec<Hexagon>,
+    pub roads: Vec<(u32,u32)>,
+    pub bugs: HashMap<String, u8>,
+    pub scorpion_index: Option<u32>
 }
 
 impl GameBoard {
@@ -71,6 +74,132 @@ impl GameBoard {
             roads: Vec::new(),
             bugs: HashMap::new(), 
             scorpion_index: None
+        }
+    }
+
+    pub fn setup(&mut self, game_board_width: i8) {
+        const CENTROID_SPACING: u8 = 100;
+        self.compute_hex_grid_centroids(CENTROID_SPACING, game_board_width);
+        self.assign_resources_and_rolls();
+    }
+
+    fn compute_hex_grid_centroids(&mut self, centroid_spacing: u8, game_board_width: i8) {
+        let num_off_center_rows: i8 = (game_board_width - 1) / 2;
+        for row in (-1 * num_off_center_rows)..=num_off_center_rows {
+            let num_hex_in_row = game_board_width - row.abs();
+            let vertical_offset: f64 = f64::from(row) * f64::sqrt(3.0/4.0);
+            let horizontal_offset: f64 = f64::from(row).abs() / 2.0;
+            for hex in 0..num_hex_in_row {
+                self.centroids.push( Centroid { 
+                    loc: Coordinate { 
+                        x: f64::from(centroid_spacing) * (horizontal_offset + f64::from(hex)), 
+                        y: f64::from(centroid_spacing) * (vertical_offset + f64::from(num_off_center_rows))
+                    }, 
+                    number: 0
+                });
+            }
+        }
+    }
+
+    fn assign_resources_and_rolls(&mut self) {
+
+        let num_centroids = self.centroids.len() as f64;
+        let canonical_count = 18.0;
+
+        // Resource ratios
+        let block_ratio = 3.0 / canonical_count;
+        let rock_ratio = 3.0 / canonical_count;
+        let timber_ratio = 4.0 / canonical_count;
+        let cereal_ratio = 4.0 / canonical_count;
+        let fiber_ratio = 4.0 / canonical_count;
+
+        // Determine number of hexagons per resource type
+        let num_block = f64::round(block_ratio * num_centroids) as u32;
+        let num_rock = f64::floor(rock_ratio * num_centroids) as u32;
+        let num_timber = f64::round(timber_ratio * num_centroids) as u32;
+        let num_cereal = f64::floor(cereal_ratio * num_centroids) as u32;
+        let num_fiber = f64::floor(fiber_ratio * num_centroids) as u32;
+
+        // Generate a randomly-shuffled vector of resources
+        let mut resources = Vec::new();
+        for _ in 0..num_block { resources.push(Resource::Block); }
+        for _ in 0..num_rock { resources.push(Resource::Rock); }
+        for _ in 0..num_timber { resources.push(Resource::Timber); }
+        for _ in 0..num_cereal { resources.push(Resource::Cereal); }
+        for _ in 0..num_fiber { resources.push(Resource::Fiber); }
+        resources.push(Resource::Desert);
+        let mut rng = thread_rng();
+        resources.shuffle(&mut rng);
+
+        // Number ratios
+        let two_ratio = 1.0 / canonical_count;
+        let three_ratio = 2.0 / canonical_count;
+        let four_ratio = 2.0 / canonical_count;
+        let five_ratio = 2.0 / canonical_count;
+        let six_ratio = 2.0 / canonical_count;
+        let eight_ratio = 2.0 / canonical_count;
+        let nine_ratio = 2.0 / canonical_count;
+        let ten_ratio = 2.0 / canonical_count;
+        let eleven_ratio = 2.0 / canonical_count;
+        let twelve_ratio = 1.0 / canonical_count;
+
+        // Determine number of hexagons per number
+        let num_two = f64::round(two_ratio * num_centroids) as u32;
+        let num_three = f64::round(three_ratio * num_centroids) as u32;
+        let num_four = f64::round(four_ratio * num_centroids) as u32;
+        let num_five = f64::round(five_ratio * num_centroids) as u32;
+        let num_six = f64::round(six_ratio * num_centroids) as u32;
+        let num_eight = f64::round(eight_ratio * num_centroids) as u32;
+        let num_nine = f64::round(nine_ratio * num_centroids) as u32;
+        let num_ten = f64::round(ten_ratio * num_centroids) as u32;
+        let num_eleven = f64::round(eleven_ratio * num_centroids) as u32;
+        let num_twelve = f64::round(twelve_ratio * num_centroids) as u32;
+
+        // println!("{}", num_two);
+        // println!("{}", num_three);
+        // println!("{}", num_four);
+        // println!("{}", num_five);
+        // println!("{}", num_six);
+        // println!("{}", num_eight);
+        // println!("{}", num_nine);
+        // println!("{}", num_ten);
+        // println!("{}", num_eleven);
+        // println!("{}", num_twelve);
+
+        // Generate a randomly-shuffed vector of numbers
+        let mut numbers = Vec::<i16>::new();
+        for _ in 0..num_two { numbers.push(2); }
+        for _ in 0..num_three { numbers.push(3); }
+        for _ in 0..num_four { numbers.push(4); }
+        for _ in 0..num_five { numbers.push(5); }
+        for _ in 0..num_six { numbers.push(6); }
+        for _ in 0..num_eight { numbers.push(8); }
+        for _ in 0..num_nine { numbers.push(9); }
+        for _ in 0..num_ten { numbers.push(10); }
+        for _ in 0..num_eleven { numbers.push(11); }
+        for _ in 0..num_twelve { numbers.push(12); }
+        numbers.push(-1); // for the Desert
+        numbers.shuffle(&mut rng);
+
+        // Make sure the desert and -1 are at the same index
+        let desert_index = resources.iter().position(|p| *p == Resource::Desert).unwrap();
+        let minus_one_index = numbers.iter().position(|p| *p == -1).unwrap();
+        if desert_index != minus_one_index {
+            numbers.swap(desert_index, minus_one_index);
+        }
+        // println!("{:?}", resources);
+        // println!("{:?}", numbers);
+
+        for (idx, &num) in numbers.iter().enumerate() {
+            self.hexagons.push( Hexagon { 
+                vertices: Vec::new(), 
+                number: num, 
+                resource: Resource::Desert
+            });
+            self.centroids[idx].number = num;
+        }
+        for (idx, rsc) in resources.drain(..).enumerate() {
+            self.hexagons[idx].resource = rsc;
         }
     }
 }
