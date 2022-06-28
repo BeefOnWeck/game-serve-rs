@@ -60,7 +60,7 @@ pub struct GameBoard {
     pub centroids: Vec<Centroid>,
     pub nodes: Vec<Coordinate>,
     pub hexagons: Vec<Hexagon>,
-    pub roads: Vec<(u32,u32)>,
+    pub roads: Vec<(usize,usize)>,
     pub bugs: HashMap<String, u8>,
     pub scorpion_index: Option<u32>
 }
@@ -81,6 +81,7 @@ impl GameBoard {
         const CENTROID_SPACING: u8 = 100;
         self.compute_hex_grid_centroids(CENTROID_SPACING, game_board_width);
         self.assign_resources_and_rolls();
+        self.compute_nodes_and_roads(CENTROID_SPACING);
     }
 
     fn compute_hex_grid_centroids(&mut self, centroid_spacing: u8, game_board_width: i8) {
@@ -201,5 +202,81 @@ impl GameBoard {
         for (idx, rsc) in resources.drain(..).enumerate() {
             self.hexagons[idx].resource = rsc;
         }
+    }
+
+    fn compute_nodes_and_roads(&mut self, centroid_spacing: u8) {
+        // Distance from each centroid to their surrounding nodes (vertices)
+        let radius = f64::from(centroid_spacing) / f64::sqrt(3.0);
+
+        // Loop over centroids and construct the nodes, roads, and hexagon vertices
+        for (idx, el) in self.centroids.iter().enumerate() {
+            let node_idx = 6 * idx as usize;
+            // Find the [non-unique] six nodes around each hexagon centroid
+            for step in 0..6 {
+                let angle = step as f64 * std::f64::consts::PI / 3.0;
+                let x = f64::round( 1000.0 * ( radius * f64::sin(angle) + el.loc.x ) ) / 1000.0;
+                let y = f64::round( 1000.0 * ( radius * f64::cos(angle) + el.loc.y ) ) / 1000.0;
+                self.nodes.push(Coordinate { x, y });
+                self.hexagons[idx].vertices.push(Coordinate{x, y});
+                if step == 0 { self.roads.push((node_idx + 5, node_idx)) }
+                else { self.roads.push((node_idx+step-1, node_idx+step)) }
+            }
+        }
+
+        // Now go through the list of nodes and reduce it down to the unique set
+        self.nodes = self.nodes.drain(..).enumerate().fold(
+            Vec::<Coordinate>::new(),
+            | mut unique, (index,value) | {
+                let new_idx: Vec<usize> = unique.iter().enumerate().filter_map(
+                    | (idx,val) | {
+                        if val.x == value.x && val.y == value.y { Some(idx) }
+                        else { None }
+                    }
+                ).collect();
+                // Is `value` already in the `unique` vector?
+                if new_idx.len() > 0 {
+                    // Update the indices in `roads`
+                    for ni in new_idx {
+                        self.roads = self.roads.iter().map(
+                            | &segment | {
+                                let s1 = if segment.0 == index { ni } else { segment.0 };
+                                let s2 = if segment.1 == index { ni } else { segment.1 };
+                                (s1,s2)
+                            }
+                        ).collect();
+                    }
+                    // And don't add the node to the `unique` list
+                    unique
+                } else { // If `value` is not already in `unique`, add it
+                    let inc_idx = unique.len();
+                    self.roads = self.roads.iter().map(
+                        | &segment | {
+                            let s1 = if segment.0 == index { inc_idx } else { segment.0 };
+                            let s2 = if segment.1 == index { inc_idx } else { segment.1 };
+                            (s1,s2)
+                        }
+                    ).collect();
+                    // Add this node to the `unique` list
+                    unique.push(value);
+                    unique
+                }
+            }
+        );
+
+        // Winnow roads down to a unique set
+        self.roads = self.roads.drain(..).fold(
+            Vec::<(usize,usize)>::new(),
+            | mut acc, cv | {
+                let mut reversibly_unique = true;
+                for a in &acc {
+                    if cv.0 == a.0 && cv.1 == a.1 { reversibly_unique = false };
+                    if cv.0 == a.1 && cv.1 == a.0 { reversibly_unique = false };
+                }
+                match reversibly_unique {
+                    true => { acc.push(cv); acc }
+                    false => acc
+                }
+            }
+        );
     }
 }

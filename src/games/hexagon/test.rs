@@ -63,6 +63,6 @@ fn board_setup() {
 
     assert_eq!(game.board.centroids.len(), 19);
     assert_eq!(game.board.hexagons.len(), 19);
-    assert_eq!(game.board.nodes.len(), 24);
-    assert_eq!(game.board.roads.len(), 30);
+    assert_eq!(game.board.nodes.len(), 54);
+    assert_eq!(game.board.roads.len(), 72);
 }
