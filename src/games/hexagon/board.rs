@@ -47,6 +47,25 @@ pub struct Hexagon {
 }
 
 #[derive(Debug, PartialEq)]
+enum BuildingType {
+    Village,
+    Empty
+}
+
+#[derive(Debug, PartialEq)]
+pub struct Node {
+    loc: Coordinate,
+    player_key: Option<String>,
+    building_type: BuildingType
+}
+
+#[derive(Debug, PartialEq)]
+pub struct Road {
+    inds: (usize,usize),
+    player_key: Option<String>
+}
+
+#[derive(Debug, PartialEq)]
 pub struct ResourceList {
     block: u16,
     rock: u16,
@@ -58,9 +77,9 @@ pub struct ResourceList {
 #[derive(Debug, PartialEq)]
 pub struct GameBoard {
     pub centroids: Vec<Centroid>,
-    pub nodes: Vec<Coordinate>,
+    pub nodes: Vec<Node>,
     pub hexagons: Vec<Hexagon>,
-    pub roads: Vec<(usize,usize)>,
+    pub roads: Vec<Road>,
     pub bugs: HashMap<String, u8>,
     pub scorpion_index: Option<u32>
 }
@@ -216,20 +235,20 @@ impl GameBoard {
                 let angle = step as f64 * std::f64::consts::PI / 3.0;
                 let x = f64::round( 1000.0 * ( radius * f64::sin(angle) + el.loc.x ) ) / 1000.0;
                 let y = f64::round( 1000.0 * ( radius * f64::cos(angle) + el.loc.y ) ) / 1000.0;
-                self.nodes.push(Coordinate { x, y });
+                self.nodes.push(Node { loc: Coordinate { x, y }, player_key: None, building_type: BuildingType::Empty });
                 self.hexagons[idx].vertices.push(Coordinate{x, y});
-                if step == 0 { self.roads.push((node_idx + 5, node_idx)) }
-                else { self.roads.push((node_idx+step-1, node_idx+step)) }
+                if step == 0 { self.roads.push( Road { inds: (node_idx + 5, node_idx), player_key: None } ) }
+                else { self.roads.push( Road { inds: (node_idx+step-1, node_idx+step), player_key: None } ) }
             }
         }
 
         // Now go through the list of nodes and reduce it down to the unique set
         self.nodes = self.nodes.drain(..).enumerate().fold(
-            Vec::<Coordinate>::new(),
+            Vec::<Node>::new(),
             | mut unique, (index,value) | {
                 let new_idx: Vec<usize> = unique.iter().enumerate().filter_map(
                     | (idx,val) | {
-                        if val.x == value.x && val.y == value.y { Some(idx) }
+                        if val.loc.x == value.loc.x && val.loc.y == value.loc.y { Some(idx) }
                         else { None }
                     }
                 ).collect();
@@ -238,10 +257,10 @@ impl GameBoard {
                     // Update the indices in `roads`
                     for ni in new_idx {
                         self.roads = self.roads.iter().map(
-                            | &segment | {
-                                let s1 = if segment.0 == index { ni } else { segment.0 };
-                                let s2 = if segment.1 == index { ni } else { segment.1 };
-                                (s1,s2)
+                            | segment | {
+                                let s1 = if segment.inds.0 == index { ni } else { segment.inds.0 };
+                                let s2 = if segment.inds.1 == index { ni } else { segment.inds.1 };
+                                Road { inds: (s1,s2), player_key: None }
                             }
                         ).collect();
                     }
@@ -250,10 +269,10 @@ impl GameBoard {
                 } else { // If `value` is not already in `unique`, add it
                     let inc_idx = unique.len();
                     self.roads = self.roads.iter().map(
-                        | &segment | {
-                            let s1 = if segment.0 == index { inc_idx } else { segment.0 };
-                            let s2 = if segment.1 == index { inc_idx } else { segment.1 };
-                            (s1,s2)
+                        | segment | {
+                            let s1 = if segment.inds.0 == index { inc_idx } else { segment.inds.0 };
+                            let s2 = if segment.inds.1 == index { inc_idx } else { segment.inds.1 };
+                            Road { inds: (s1,s2), player_key: None }
                         }
                     ).collect();
                     // Add this node to the `unique` list
@@ -265,12 +284,12 @@ impl GameBoard {
 
         // Winnow roads down to a unique set
         self.roads = self.roads.drain(..).fold(
-            Vec::<(usize,usize)>::new(),
+            Vec::<Road>::new(),
             | mut acc, cv | {
                 let mut reversibly_unique = true;
                 for a in &acc {
-                    if cv.0 == a.0 && cv.1 == a.1 { reversibly_unique = false };
-                    if cv.0 == a.1 && cv.1 == a.0 { reversibly_unique = false };
+                    if cv.inds.0 == a.inds.0 && cv.inds.1 == a.inds.1 { reversibly_unique = false };
+                    if cv.inds.0 == a.inds.1 && cv.inds.1 == a.inds.0 { reversibly_unique = false };
                 }
                 match reversibly_unique {
                     true => { acc.push(cv); acc }
