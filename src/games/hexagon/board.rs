@@ -30,7 +30,7 @@ impl Centroid {
 }
 
 #[derive(Debug, PartialEq)]
-enum Resource {
+pub enum Resource {
     Block,
     Rock,
     Timber,
@@ -41,9 +41,9 @@ enum Resource {
 
 #[derive(Debug, PartialEq)]
 pub struct Hexagon {
-    vertices: Vec<Coordinate>,
-    number: i16,
-    resource: Resource
+    pub vertices: Vec<Coordinate>,
+    pub number: i16,
+    pub resource: Resource
 }
 
 #[derive(Debug, PartialEq)]

@@ -11,6 +11,7 @@ use crate::games::core::traits::Game;
 mod board;
 use board::{
     GameBoard,
+    Resource,
     ResourceList
 };
 
