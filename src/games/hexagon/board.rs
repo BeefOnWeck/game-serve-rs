@@ -96,6 +96,17 @@ impl GameBoard {
         }
     }
 
+    pub fn reset(&mut self) -> &mut GameBoard {
+        self.centroids.truncate(0);
+        self.nodes.truncate(0);
+        self.hexagons.truncate(0);
+        self.roads.truncate(0);
+        self.bugs.clear();
+        self.scorpion_index = None;
+
+        self
+    }
+
     pub fn setup(&mut self, game_board_width: i8) {
         const CENTROID_SPACING: u8 = 100;
         self.compute_hex_grid_centroids(CENTROID_SPACING, game_board_width);
@@ -235,8 +246,8 @@ impl GameBoard {
                 let angle = step as f64 * std::f64::consts::PI / 3.0;
                 let x = f64::round( 1000.0 * ( radius * f64::sin(angle) + el.loc.x ) ) / 1000.0;
                 let y = f64::round( 1000.0 * ( radius * f64::cos(angle) + el.loc.y ) ) / 1000.0;
-                self.nodes.push(Node { loc: Coordinate { x, y }, player_key: None, building_type: BuildingType::Empty });
-                self.hexagons[idx].vertices.push(Coordinate{x, y});
+                self.nodes.push( Node { loc: Coordinate { x, y }, player_key: None, building_type: BuildingType::Empty } );
+                self.hexagons[idx].vertices.push( Coordinate{x, y} );
                 if step == 0 { self.roads.push( Road { inds: (node_idx + 5, node_idx), player_key: None } ) }
                 else { self.roads.push( Road { inds: (node_idx+step-1, node_idx+step), player_key: None } ) }
             }
@@ -298,4 +309,5 @@ impl GameBoard {
             }
         );
     }
+
 }

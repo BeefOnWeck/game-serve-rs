@@ -66,3 +66,38 @@ fn board_setup() {
     assert_eq!(game.board.nodes.len(), 54);
     assert_eq!(game.board.roads.len(), 72);
 }
+
+#[test]
+fn should_reset() {
+    let mut game = HexagonIsland::new();
+    let config = HexagonIslandConfig {
+        num_players: 2,
+        score_to_win: 10,
+        game_board_width: 5
+    };
+    game.configure_game(config).unwrap();
+    game.board.setup(5);
+
+    game.reset();
+    assert_eq!(
+        game,
+        HexagonIsland {
+            phase: Phase::Boot,
+            round: 0,
+            players: Players {
+                list: Vec::new(),
+                active_key: None,
+                cardinality: 0,
+            },
+            possible_actions: PossibleActions::None,
+            config: HexagonIslandConfig {
+                num_players: 2,
+                score_to_win: 10,
+                game_board_width: 5
+            },
+            roll_result: (0,0), 
+            player_resources: HashMap::new(), 
+            board: GameBoard::new()
+        }
+    )
+}

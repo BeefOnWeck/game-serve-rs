@@ -80,6 +80,7 @@ impl Game for HexagonIsland {
         self.phase = Phase::Boot;
         self.round = 0;
         self.players.reset();
+        self.board.reset();
 
         self
     }
