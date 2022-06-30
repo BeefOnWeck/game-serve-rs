@@ -14,7 +14,7 @@ fn initial_state() {
                 cardinality: 0,
             },
             possible_actions: PossibleActions::None,
-            config: HexagonIslandConfig {
+            config: Config {
                 num_players: 2,
                 score_to_win: 10,
                 game_board_width: 5
@@ -32,7 +32,7 @@ fn game_configuration() {
     let num_players = 4;
     let score_to_win = 15;
     let game_board_width = 9;
-    let config = HexagonIslandConfig {
+    let config = Config {
         num_players,
         score_to_win,
         game_board_width
@@ -42,7 +42,7 @@ fn game_configuration() {
     assert_eq!(game.config.score_to_win, 15);
     assert_eq!(game.config.game_board_width, 9);
     game.next_phase();
-    let attempt = game.configure_game(HexagonIslandConfig {
+    let attempt = game.configure_game(Config {
         num_players: 2,
         score_to_win: 7,
         game_board_width: 7
@@ -53,7 +53,7 @@ fn game_configuration() {
 #[test]
 fn board_setup() {
     let mut game = HexagonIsland::new();
-    let config = HexagonIslandConfig {
+    let config = Config {
         num_players: 2,
         score_to_win: 10,
         game_board_width: 5
@@ -92,6 +92,7 @@ fn board_setup() {
 
     assert_eq!(resource_counts, (3, 3, 4, 4, 4, 1));
 
+    let mut bad = 0;
     let number_counts = game.board.hexagons.iter().fold(
         (0,0,0,0,0,0,0,0,0,0,0,0),
         | num_cnt, hex | {
@@ -109,7 +110,6 @@ fn board_setup() {
                 mut eleven,
                 mut twelve
             ) = num_cnt;
-            let mut bad = 0;
             match hex.number {
                 -1 => desert += 1,
                 2 => two += 1,
@@ -131,12 +131,13 @@ fn board_setup() {
     );
 
     assert_eq!(number_counts, (1,1,2,2,2,2,0,2,2,2,2,1));
+    assert_eq!(bad, 0);
 }
 
 #[test]
 fn should_reset() {
     let mut game = HexagonIsland::new();
-    let config = HexagonIslandConfig {
+    let config = Config {
         num_players: 2,
         score_to_win: 10,
         game_board_width: 5
@@ -156,7 +157,7 @@ fn should_reset() {
                 cardinality: 0,
             },
             possible_actions: PossibleActions::None,
-            config: HexagonIslandConfig {
+            config: Config {
                 num_players: 2,
                 score_to_win: 10,
                 game_board_width: 5
@@ -166,4 +167,14 @@ fn should_reset() {
             board: GameBoard::new()
         }
     )
+}
+
+#[test]
+fn can_roll_the_dice() {
+    let mut game = HexagonIsland::new();
+    game.phase = Phase::Setup;
+    assert_eq!(game.roll_result, (0,0));
+    let action = Command { action: PossibleActions::RollDice };
+    game.process_action(action).unwrap();
+    assert!(game.roll_result != (0,0));
 }

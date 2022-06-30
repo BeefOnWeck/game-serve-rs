@@ -1,28 +1,35 @@
 use std::collections::HashMap;
 
-use crate::games::core::{
-    Phase,
-    PossibleActions,
-    CoreCommand
-};
+use crate::games::core::Phase;
 use crate::games::core::playe::Players;
 use crate::games::core::traits::Game;
 
-mod board;
-use board::{
-    GameBoard,
-    Resource,
-    ResourceList
-};
+mod actions;
 
-struct HexagonIslandStatus {
+mod board;
+use board::{ GameBoard, Resource, ResourceList };
+
+use self::actions::roll_dice;
+
+
+struct Status {
     phase: Phase,
     round: u16,
     players: Players
 }
 
+#[derive(Clone, Debug, PartialEq)]
+pub enum PossibleActions {
+    RollDice,
+    None
+}
+
+pub struct Command {
+    pub action: PossibleActions
+}
+
 #[derive(Debug, PartialEq)]
-struct HexagonIslandConfig {
+struct Config {
     num_players: u8,
     score_to_win: u8,
     game_board_width: u8
@@ -34,16 +41,16 @@ struct HexagonIsland {
     round: u16,
     players: Players,
     possible_actions: PossibleActions,
-    config: HexagonIslandConfig,
+    config: Config,
     roll_result: (u8,u8),
     player_resources: HashMap<String, ResourceList>,
     board: GameBoard
 }
 
 impl Game for HexagonIsland {
-    type Status = HexagonIslandStatus;
-    type Command = CoreCommand;
-    type Config = HexagonIslandConfig;
+    type Status = Status;
+    type Command = Command;
+    type Config = Config;
 
     fn new() -> HexagonIsland {
         HexagonIsland {
@@ -51,7 +58,7 @@ impl Game for HexagonIsland {
             round: 0,
             players: Players::new(),
             possible_actions: PossibleActions::None,
-            config: HexagonIslandConfig {
+            config: Config {
                 num_players: 2,
                 score_to_win: 10,
                 game_board_width: 5
@@ -106,8 +113,8 @@ impl Game for HexagonIsland {
         }
     }
 
-    fn get_game_status(&self) -> HexagonIslandStatus {
-        HexagonIslandStatus { 
+    fn get_game_status(&self) -> Status {
+        Status { 
             phase: self.phase.clone(),
             round: self.round.clone(),
             players: self.players.clone()
@@ -117,6 +124,10 @@ impl Game for HexagonIsland {
     fn process_action(&mut self, command: Self::Command) -> Result<&mut HexagonIsland, &'static str> {
         match self.phase {
             Phase::Setup | Phase::Play => match command.action {
+                PossibleActions::RollDice => {
+                    self.roll_result = roll_dice();
+                    Ok(self)
+                },
                 PossibleActions::None => Ok(self)
             },
             _ => Err("Can only take action during the Setup or Play phases!")

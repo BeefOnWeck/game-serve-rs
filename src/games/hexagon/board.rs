@@ -186,17 +186,6 @@ impl GameBoard {
         let num_eleven = f64::round(eleven_ratio * num_centroids) as u32;
         let num_twelve = f64::round(twelve_ratio * num_centroids) as u32;
 
-        // println!("{}", num_two);
-        // println!("{}", num_three);
-        // println!("{}", num_four);
-        // println!("{}", num_five);
-        // println!("{}", num_six);
-        // println!("{}", num_eight);
-        // println!("{}", num_nine);
-        // println!("{}", num_ten);
-        // println!("{}", num_eleven);
-        // println!("{}", num_twelve);
-
         // Generate a randomly-shuffed vector of numbers
         let mut numbers = Vec::<i16>::new();
         for _ in 0..num_two { numbers.push(2); }
@@ -218,8 +207,6 @@ impl GameBoard {
         if desert_index != minus_one_index {
             numbers.swap(desert_index, minus_one_index);
         }
-        // println!("{:?}", resources);
-        // println!("{:?}", numbers);
 
         for (idx, &num) in numbers.iter().enumerate() {
             self.hexagons.push( Hexagon { 
