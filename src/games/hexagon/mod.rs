@@ -24,10 +24,6 @@ pub enum PossibleActions {
     None
 }
 
-pub struct Command {
-    pub action: PossibleActions
-}
-
 #[derive(Debug, PartialEq)]
 struct Config {
     num_players: u8,
@@ -49,7 +45,7 @@ struct HexagonIsland {
 
 impl Game for HexagonIsland {
     type Status = Status;
-    type Command = Command;
+    type Command = PossibleActions;
     type Config = Config;
 
     fn new() -> HexagonIsland {
@@ -123,7 +119,7 @@ impl Game for HexagonIsland {
 
     fn process_action(&mut self, command: Self::Command) -> Result<&mut HexagonIsland, &'static str> {
         match self.phase {
-            Phase::Setup | Phase::Play => match command.action {
+            Phase::Setup | Phase::Play => match command {
                 PossibleActions::RollDice => {
                     self.roll_result = roll_dice();
                     Ok(self)
