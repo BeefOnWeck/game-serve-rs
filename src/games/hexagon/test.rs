@@ -1,4 +1,5 @@
 use super::*;
+use board::Resource;
 
 #[test]
 fn initial_state() {
@@ -20,6 +21,7 @@ fn initial_state() {
                 game_board_width: 5
             },
             roll_result: (0,0), 
+            player_colors: HashMap::new(),
             player_resources: HashMap::new(), 
             board: GameBoard::new()
         }
@@ -162,7 +164,8 @@ fn should_reset() {
                 score_to_win: 10,
                 game_board_width: 5
             },
-            roll_result: (0,0), 
+            roll_result: (0,0),
+            player_colors: HashMap::new(),
             player_resources: HashMap::new(), 
             board: GameBoard::new()
         }
@@ -240,4 +243,30 @@ fn dice_are_right_random() {
     );
 
     assert!(number_of_outliers == 0);
+}
+
+#[test]
+fn player_color() {
+    let mut game = HexagonIsland::new();
+    let config = Config {
+        num_players: 2,
+        score_to_win: 10,
+        game_board_width: 5
+    };
+    game.configure_game(config).unwrap();
+
+    game.add_player("key1", "name1", "socket_id1")
+        .add_player("key2", "name2", "socket_id2");
+
+    let mut expected_colors: HashMap<String, String> = HashMap::new();
+    expected_colors.insert(String::from("key1"), String::from("#DC143C"));
+    expected_colors.insert(String::from("key2"), String::from("#4169E1"));
+
+    assert_eq!(game.players.cardinality, 2);
+    assert_eq!(game.player_colors, expected_colors);
+}
+
+#[test]
+fn build_nodes_and_roads() {
+
 }

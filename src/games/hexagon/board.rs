@@ -8,25 +8,10 @@ pub struct Coordinate {
     y: f64
 }
 
-impl Coordinate {
-    fn new() -> Coordinate {
-        Coordinate { x: 0.0, y: 0.0 }
-    }
-}
-
 #[derive(Debug, PartialEq)]
 pub struct Centroid {
     loc: Coordinate,
     number: i16
-}
-
-impl Centroid {
-    fn new() -> Centroid {
-        Centroid { 
-            loc: Coordinate::new(), 
-            number: 0
-        }
-    }
 }
 
 #[derive(Debug, PartialEq)]

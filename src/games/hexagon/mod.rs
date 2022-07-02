@@ -5,12 +5,13 @@ use crate::games::core::playe::Players;
 use crate::games::core::traits::Game;
 
 mod actions;
-
 mod board;
-use board::{ GameBoard, Resource, ResourceList };
+mod colo;
+
+use board::{ GameBoard, ResourceList };
+use colo::get_player_color;
 
 use self::actions::roll_dice;
-
 
 struct Status {
     phase: Phase,
@@ -39,6 +40,7 @@ struct HexagonIsland {
     possible_actions: PossibleActions,
     config: Config,
     roll_result: (u8,u8),
+    player_colors: HashMap<String, String>,
     player_resources: HashMap<String, ResourceList>,
     board: GameBoard
 }
@@ -59,7 +61,8 @@ impl Game for HexagonIsland {
                 score_to_win: 10,
                 game_board_width: 5
             },
-            roll_result: (0,0), 
+            roll_result: (0,0),
+            player_colors: HashMap::new(),
             player_resources: HashMap::new(), 
             board: GameBoard::new()
         }
@@ -85,12 +88,20 @@ impl Game for HexagonIsland {
         self.round = 0;
         self.players.reset();
         self.board.reset();
+        self.player_resources.clear();
+        self.player_colors.clear();
+        self.roll_result = (0,0);
 
         self
     }
 
     fn add_player(&mut self, key: &str, name: &str, socket_id: &str) -> &mut HexagonIsland {
+        let idx = self.players.cardinality;
         self.players.add_player(key, name, socket_id);
+        self.player_colors.insert(
+            String::from(key),
+            get_player_color(idx)
+        );
 
         self
     }
