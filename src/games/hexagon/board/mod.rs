@@ -283,3 +283,6 @@ impl GameBoard {
     }
 
 }
+
+#[cfg(test)]
+mod test;
