@@ -5,6 +5,7 @@ use super::board::{ Road, Node, ResourceList };
 #[derive(Clone, Debug, PartialEq)]
 pub enum PossibleActions {
     RollDice,
+    BuildRoad,
     None
 }
 

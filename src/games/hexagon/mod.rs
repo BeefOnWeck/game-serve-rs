@@ -8,7 +8,7 @@ mod actions;
 mod board;
 mod colo;
 
-use actions::{ PossibleActions, roll_dice };
+use actions::{ PossibleActions, roll_dice, build_road };
 use board::{ GameBoard, ResourceList };
 use colo::get_player_color;
 
@@ -20,9 +20,15 @@ struct Status {
 
 #[derive(Debug, PartialEq)]
 struct Config {
-    num_players: u8,
+    num_players: usize,
     score_to_win: u8,
     game_board_width: u8
+}
+
+struct Command {
+    action: PossibleActions,
+    player: String,
+    value: Option<usize>
 }
 
 #[derive(Debug, PartialEq)]
@@ -40,7 +46,7 @@ struct HexagonIsland {
 
 impl Game for HexagonIsland {
     type Status = Status;
-    type Command = PossibleActions;
+    type Command = Command;
     type Config = Config;
 
     fn new() -> HexagonIsland {
@@ -90,11 +96,22 @@ impl Game for HexagonIsland {
 
     fn add_player(&mut self, key: &str, name: &str, socket_id: &str) -> &mut HexagonIsland {
         let idx = self.players.cardinality;
+        // TODO: Throw error if we already have enough players
+        // TODO: Throw error if we're already in the play phase
         self.players.add_player(key, name, socket_id);
         self.player_colors.insert(
             String::from(key),
             get_player_color(idx)
         );
+        self.player_resources.insert(
+            String::from(key),
+            ResourceList { block: 0, rock: 0, timber: 0, fiber: 0, cereal: 0 }
+        );
+
+        if self.players.cardinality == self.config.num_players { 
+            self.next_phase();
+            self.board.setup(5);
+        }
 
         self
     }
@@ -124,11 +141,23 @@ impl Game for HexagonIsland {
     fn process_action(&mut self, command: Self::Command) -> Result<&mut HexagonIsland, &'static str> {
         // TODO: Throw error if player tries an action out of turn (need to augment Command)
         match self.phase {
-            Phase::Setup | Phase::Play => match command {
+            Phase::Setup | Phase::Play => match command.action {
                 PossibleActions::RollDice => {
                     self.roll_result = roll_dice();
                     Ok(self)
                 },
+                PossibleActions::BuildRoad => {
+                    let resources = self.player_resources.get_mut(&command.player).unwrap();
+                    build_road(
+                        command.value.unwrap(), 
+                        command.player, 
+                        &mut self.board.roads, 
+                        &self.board.nodes, 
+                        resources, 
+                        true
+                    );
+                    Ok(self)
+                }
                 PossibleActions::None => Ok(self)
             },
             _ => Err("Can only take action during the Setup or Play phases!")

@@ -93,8 +93,12 @@ fn can_roll_the_dice() {
     game.phase = Phase::Play;
     assert_eq!(game.roll_result, (0,0));
     // TODO: Verify error
-    let action = PossibleActions::RollDice;
-    game.process_action(action).unwrap();
+    let command = Command {
+        action: PossibleActions::RollDice,
+        player: String::from("key1"),
+        value: None
+    };
+    game.process_action(command).unwrap();
     assert!(game.roll_result != (0,0));
 }
 
@@ -132,5 +136,16 @@ fn build_nodes_and_roads() {
     game.add_player("key1", "name1", "socket_id1")
         .add_player("key2", "name2", "socket_id2");
 
-    
+    let command = Command {
+        action: PossibleActions::BuildRoad,
+        player: String::from("key1"),
+        value: Some(0)
+    };
+    game.process_action(command).unwrap();
+
+    let num_built_roads = game.board.roads.iter().fold(
+        0, 
+        | acc, cv | if cv.player_key != None { acc + 1 } else { acc }
+    );
+    assert_eq!(num_built_roads, 1);
 }
