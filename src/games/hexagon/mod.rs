@@ -8,21 +8,14 @@ mod actions;
 mod board;
 mod colo;
 
+use actions::{ PossibleActions, roll_dice };
 use board::{ GameBoard, ResourceList };
 use colo::get_player_color;
-
-use self::actions::roll_dice;
 
 struct Status {
     phase: Phase,
     round: u16,
     players: Players
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub enum PossibleActions {
-    RollDice,
-    None
 }
 
 #[derive(Debug, PartialEq)]
@@ -129,6 +122,7 @@ impl Game for HexagonIsland {
     }
 
     fn process_action(&mut self, command: Self::Command) -> Result<&mut HexagonIsland, &'static str> {
+        // TODO: Throw error if player tries an action out of turn (need to augment Command)
         match self.phase {
             Phase::Setup | Phase::Play => match command {
                 PossibleActions::RollDice => {

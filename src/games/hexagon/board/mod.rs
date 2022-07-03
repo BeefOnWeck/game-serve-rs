@@ -46,17 +46,17 @@ pub struct Node {
 
 #[derive(Debug, PartialEq)]
 pub struct Road {
-    inds: (usize,usize),
-    player_key: Option<String>
+    pub inds: (usize,usize),
+    pub player_key: Option<String>
 }
 
 #[derive(Debug, PartialEq)]
 pub struct ResourceList {
-    block: u16,
-    rock: u16,
-    timber: u16,
-    fiber: u16,
-    cereal: u16
+    pub block: u16,
+    pub rock: u16,
+    pub timber: u16,
+    pub fiber: u16,
+    pub cereal: u16
 }
 
 #[derive(Debug, PartialEq)]

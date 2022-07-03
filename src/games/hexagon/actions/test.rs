@@ -1,4 +1,5 @@
 use super::*;
+use crate::games::hexagon::board::{ GameBoard, ResourceList };
 
 // The sum total of rolling two dice can range between 2 and 12.
 // There are 6 * 6 = 36 possible combinations of the two die rolls.
@@ -13,7 +14,7 @@ use super::*;
 // Counts           x   x   x   x   x   x   x   x    x    x    x
 // Dice total --> | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 |
 #[test]
-fn dice_are_right_random() {
+fn dice_distribution() {
 
     const NUM_TRIALS: usize = 10000;
 
@@ -58,4 +59,34 @@ fn dice_are_right_random() {
     );
 
     assert!(number_of_outliers == 0);
+}
+
+#[test]
+fn build_a_road() {
+    let mut board = GameBoard::new();
+    board.setup(5);
+
+    let num_built_roads = board.roads.iter().fold(
+        0, 
+        | acc, cv | if cv.player_key != None { acc + 1 } else { acc }
+    );
+    assert!(num_built_roads == 0);
+
+    let road_index = 0;
+    let player_key = String::from("key1");
+    let mut resources = ResourceList { 
+        block: 0,
+        rock: 0,
+        timber: 0,
+        fiber: 0,
+        cereal: 0
+    };
+    build_road(road_index, player_key, &mut board.roads, &board.nodes, &mut resources, false);
+
+    let num_built_roads = board.roads.iter().fold(
+        0, 
+        | acc, cv | if cv.player_key != None { acc + 1 } else { acc }
+    );
+    assert_eq!(num_built_roads, 1);
+    
 }
