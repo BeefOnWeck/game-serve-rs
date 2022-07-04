@@ -32,16 +32,16 @@ pub struct Hexagon {
 }
 
 #[derive(Debug, PartialEq)]
-enum BuildingType {
+pub enum BuildingType {
     Village,
     Empty
 }
 
 #[derive(Debug, PartialEq)]
 pub struct Node {
-    loc: Coordinate,
-    player_key: Option<String>,
-    building_type: BuildingType
+    pub loc: Coordinate,
+    pub player_key: Option<String>,
+    pub building_type: BuildingType
 }
 
 #[derive(Debug, PartialEq)]

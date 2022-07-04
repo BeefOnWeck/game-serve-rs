@@ -12,6 +12,8 @@ use actions::{ PossibleActions, roll_dice, build_road };
 use board::{ GameBoard, ResourceList };
 use colo::get_player_color;
 
+use self::actions::build_node;
+
 struct Status {
     phase: Phase,
     round: u16,
@@ -28,7 +30,7 @@ struct Config {
 #[derive(Copy, Clone, PartialEq)]
 enum Target {
     Road,
-    Village,
+    Node,
     None
 }
 
@@ -175,8 +177,18 @@ impl Game for HexagonIsland {
                         build_road(
                             r.1.unwrap(), 
                             command.player.clone(), 
-                            &mut self.board.roads, 
-                            &self.board.nodes
+                            &self.board.nodes,
+                            &mut self.board.roads
+                        );
+                    }
+
+                    let nodes = command.target.iter().filter(|t| t.0 == Target::Node);
+                    for n in nodes {
+                        build_node(
+                            n.1.unwrap(), 
+                            command.player.clone(), 
+                            &mut self.board.nodes,
+                            &self.board.roads
                         );
                     }
                     

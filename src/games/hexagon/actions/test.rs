@@ -74,19 +74,33 @@ fn build_a_road() {
 
     let road_index = 0;
     let player_key = String::from("key1");
-    let mut resources = ResourceList { 
-        block: 0,
-        rock: 0,
-        timber: 0,
-        fiber: 0,
-        cereal: 0
-    };
-    build_road(road_index, player_key, &mut board.roads, &board.nodes);
+    build_road(road_index, player_key, &board.nodes, &mut board.roads);
 
     let num_built_roads = board.roads.iter().fold(
         0, 
         | acc, cv | if cv.player_key != None { acc + 1 } else { acc }
     );
     assert_eq!(num_built_roads, 1);
-    
+}
+
+#[test]
+fn build_on_a_node() {
+    let mut board = GameBoard::new();
+    board.setup(5);
+
+    let num_built_nodes = board.nodes.iter().fold(
+        0, 
+        | acc, cv | if cv.player_key != None { acc + 1 } else { acc }
+    );
+    assert!(num_built_nodes == 0);
+
+    let node_index = 0;
+    let player_key = String::from("key1");
+    build_node(node_index, player_key, &mut board.nodes, &board.roads);
+
+    let num_built_nodes = board.nodes.iter().fold(
+        0, 
+        | acc, cv | if cv.player_key != None { acc + 1 } else { acc }
+    );
+    assert_eq!(num_built_nodes, 1);
 }
