@@ -5,7 +5,7 @@ use super::board::{ Road, Node, ResourceList };
 #[derive(Clone, Debug, PartialEq)]
 pub enum PossibleActions {
     RollDice,
-    BuildRoad,
+    BuildStuff,
     None
 }
 
@@ -21,14 +21,8 @@ pub fn build_road(
     road_index: usize, 
     player_key: String, 
     roads: &mut Vec<Road>, 
-    nodes: &Vec<Node>, 
-    resources: &mut ResourceList, 
-    require_payment: bool
+    nodes: &Vec<Node>
 ) {
-    
-    if require_payment {
-        // TODO: Credit check
-    }
 
     // TODO: Check for valid road index
 
@@ -37,8 +31,6 @@ pub fn build_road(
     // TODO: Do either of the nodes connected by this road contain a building by this player?
 
      // TODO: Is there an adjacent road owned by this player?
-
-     // TODO: Deduct resources
 
      roads[road_index].player_key = Some(player_key);
 

@@ -96,7 +96,7 @@ fn can_roll_the_dice() {
     let command = Command {
         action: PossibleActions::RollDice,
         player: String::from("key1"),
-        value: None
+        target: [(Target::None, None); 5]
     };
     game.process_action(command).unwrap();
     assert!(game.roll_result != (0,0));
@@ -136,11 +136,11 @@ fn build_nodes_and_roads() {
     game.add_player("key1", "name1", "socket_id1")
         .add_player("key2", "name2", "socket_id2");
 
-    let command = Command {
-        action: PossibleActions::BuildRoad,
-        player: String::from("key1"),
-        value: Some(0)
-    };
+    let mut command = Command::new(
+        PossibleActions::BuildStuff,
+        String::from("key1")
+    );
+    command.target[0] = (Target::Road, Some(0));
     game.process_action(command).unwrap();
 
     let num_built_roads = game.board.roads.iter().fold(

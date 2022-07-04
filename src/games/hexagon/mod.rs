@@ -25,10 +25,27 @@ struct Config {
     game_board_width: u8
 }
 
+#[derive(Copy, Clone, PartialEq)]
+enum Target {
+    Road,
+    Village,
+    None
+}
+
 struct Command {
-    action: PossibleActions,
+    pub action: PossibleActions,
     player: String,
-    value: Option<usize>
+    pub target: [( Target, Option<usize> ); 5]
+}
+
+impl Command {
+    pub fn new(action: PossibleActions, player: String) -> Command {
+        Command { 
+            action, 
+            player: player.clone(),
+            target: [( Target::None, None ); 5]
+        }
+    }
 }
 
 #[derive(Debug, PartialEq)]
@@ -146,16 +163,23 @@ impl Game for HexagonIsland {
                     self.roll_result = roll_dice();
                     Ok(self)
                 },
-                PossibleActions::BuildRoad => {
-                    let resources = self.player_resources.get_mut(&command.player).unwrap();
-                    build_road(
-                        command.value.unwrap(), 
-                        command.player, 
-                        &mut self.board.roads, 
-                        &self.board.nodes, 
-                        resources, 
-                        true
-                    );
+                PossibleActions::BuildStuff => {
+                    // 1. Loop over node and road indices (roads first)
+                    // 2. Get cost to build
+                    // 3. Check credit
+                    // 4. If check passes, build
+                    // 5. If build passes, deduct cost
+                    // let resources = self.player_resources.get_mut(&command.player).unwrap();
+                    let roads = command.target.iter().filter(|t| t.0 == Target::Road);
+                    for r in roads {
+                        build_road(
+                            r.1.unwrap(), 
+                            command.player.clone(), 
+                            &mut self.board.roads, 
+                            &self.board.nodes
+                        );
+                    }
+                    
                     Ok(self)
                 }
                 PossibleActions::None => Ok(self)

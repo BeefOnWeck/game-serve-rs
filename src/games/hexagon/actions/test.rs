@@ -81,7 +81,7 @@ fn build_a_road() {
         fiber: 0,
         cereal: 0
     };
-    build_road(road_index, player_key, &mut board.roads, &board.nodes, &mut resources, false);
+    build_road(road_index, player_key, &mut board.roads, &board.nodes);
 
     let num_built_roads = board.roads.iter().fold(
         0, 
