@@ -2,6 +2,8 @@ use std::collections::HashMap;
 use rand::thread_rng;
 use rand::seq::SliceRandom;
 
+use crate::games::hexagon::resources::Resource;
+
 #[derive(Debug, PartialEq)]
 pub struct Coordinate {
     x: f64,
@@ -12,16 +14,6 @@ pub struct Coordinate {
 pub struct Centroid {
     loc: Coordinate,
     number: i16
-}
-
-#[derive(Debug, PartialEq)]
-pub enum Resource {
-    Block,
-    Rock,
-    Timber,
-    Fiber,
-    Cereal,
-    Desert
 }
 
 #[derive(Debug, PartialEq)]
@@ -48,15 +40,6 @@ pub struct Node {
 pub struct Road {
     pub inds: (usize,usize),
     pub player_key: Option<String>
-}
-
-#[derive(Debug, PartialEq)]
-pub struct ResourceList {
-    pub block: u16,
-    pub rock: u16,
-    pub timber: u16,
-    pub fiber: u16,
-    pub cereal: u16
 }
 
 #[derive(Debug, PartialEq)]

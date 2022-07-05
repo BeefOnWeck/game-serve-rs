@@ -7,10 +7,12 @@ use crate::games::core::traits::Game;
 mod actions;
 mod board;
 mod colo;
+mod resources;
 
 use actions::{ PossibleActions, roll_dice, build_road };
-use board::{ GameBoard, ResourceList };
+use board::{ GameBoard };
 use colo::get_player_color;
+use resources::{ ResourceList };
 
 use self::actions::build_node;
 
@@ -124,7 +126,7 @@ impl Game for HexagonIsland {
         );
         self.player_resources.insert(
             String::from(key),
-            ResourceList { block: 0, rock: 0, timber: 0, fiber: 0, cereal: 0 }
+            ResourceList::new()
         );
 
         if self.players.cardinality == self.config.num_players { 
@@ -174,7 +176,7 @@ impl Game for HexagonIsland {
                     // let resources = self.player_resources.get_mut(&command.player).unwrap();
                     let roads = command.target.iter().filter(|t| t.0 == Target::Road);
                     for r in roads {
-                        build_road(
+                        let _status = build_road(
                             r.1.unwrap(), 
                             command.player.clone(), 
                             &self.board.nodes,
@@ -184,7 +186,7 @@ impl Game for HexagonIsland {
 
                     let nodes = command.target.iter().filter(|t| t.0 == Target::Node);
                     for n in nodes {
-                        let status = build_node(
+                        let _status = build_node(
                             n.1.unwrap(), 
                             command.player.clone(), 
                             &mut self.board.nodes,

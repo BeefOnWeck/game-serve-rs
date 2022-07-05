@@ -1,5 +1,5 @@
 use super::*;
-use crate::games::hexagon::board::{ GameBoard, ResourceList };
+use crate::games::hexagon::board::{ GameBoard };
 
 // The sum total of rolling two dice can range between 2 and 12.
 // There are 6 * 6 = 36 possible combinations of the two die rolls.
@@ -24,7 +24,7 @@ fn dice_distribution() {
         expected_probability: f64,
         expected_value: f64,
         standard_deviation: f64
-    };
+    }
 
     let mut histogram: Vec<Bin> = (0..=10).map(
         | idx | {
@@ -100,7 +100,7 @@ fn build_on_a_node() {
 
     let node_index = 0;
     let player_key = String::from("key1");
-    let status = build_node(node_index, player_key, &mut board.nodes, &board.roads, true);
+    let _status = build_node(node_index, player_key, &mut board.nodes, &board.roads, true);
 
     let num_built_nodes = board.nodes.iter().fold(
         0, 

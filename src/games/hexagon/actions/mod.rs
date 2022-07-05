@@ -1,6 +1,6 @@
 use rand::{thread_rng, Rng};
 
-use super::board::{ Road, Node, ResourceList, BuildingType };
+use super::board::{ Road, Node, BuildingType };
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum PossibleActions {
