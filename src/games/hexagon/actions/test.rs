@@ -72,9 +72,13 @@ fn build_a_road() {
     );
     assert!(num_built_roads == 0);
 
+    let node_index = 0;
+    let player_key = String::from("key1");
+    let _status = build_node(node_index, player_key, &mut board.nodes, &board.roads, true);
+
     let road_index = 0;
     let player_key = String::from("key1");
-    build_road(road_index, player_key, &board.nodes, &mut board.roads);
+    let _status = build_road(road_index, player_key, &board.nodes, &mut board.roads);
 
     let num_built_roads = board.roads.iter().fold(
         0, 
@@ -140,4 +144,40 @@ fn node_building_errors() {
     let status = build_node(node_index, player_key, &mut board.nodes, &board.roads, is_setup);
     assert_eq!(status, Err("Cannot make building; after initial setup you must build next to roads that you own."));
 
+}
+
+#[test]
+fn road_building_errors() {
+    let mut board = GameBoard::new();
+    board.setup(5);
+
+    let road_index = 10000000;
+    let player_key = String::from("key1");
+    let status = build_road(road_index, player_key, &board.nodes, &mut board.roads);
+    assert_eq!(status, Err("Cannot build road; invalid road index."));
+
+    let node_index = 0;
+    let player_key = String::from("key1");
+    let is_setup = true;
+    let _status = build_node(node_index, player_key, &mut board.nodes, &board.roads, is_setup);
+
+    let road_index = 0;
+    let player_key = String::from("key1");
+    let status = build_road(road_index, player_key, &board.nodes, &mut board.roads);
+    assert_eq!(status, Ok(()));
+
+    let road_index = 0;
+    let player_key = String::from("key1");
+    let status = build_road(road_index, player_key, &board.nodes, &mut board.roads);
+    assert_eq!(status, Err("Cannot build road; there is already something there."));
+
+    let road_index = 10;
+    let player_key = String::from("key1");
+    let status = build_road(road_index, player_key, &board.nodes, &mut board.roads);
+    assert_eq!(status, Err("Roads have to be built next to other roads or buildings you own."));
+
+    let road_index = 1;
+    let player_key = String::from("key1");
+    let status = build_road(road_index, player_key, &board.nodes, &mut board.roads);
+    assert_eq!(status, Ok(()));
 }

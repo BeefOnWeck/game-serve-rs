@@ -151,6 +151,13 @@ fn build_nodes_and_roads() {
         PossibleActions::BuildStuff,
         String::from("key1")
     );
+    command.target[0] = (Target::Node, Some(0));
+    game.process_action(command).unwrap();
+
+    let mut command = Command::new(
+        PossibleActions::BuildStuff,
+        String::from("key1")
+    );
     command.target[0] = (Target::Road, Some(0));
     game.process_action(command).unwrap();
 
@@ -159,13 +166,6 @@ fn build_nodes_and_roads() {
         | acc, cv | if cv.player_key != None { acc + 1 } else { acc }
     );
     assert_eq!(num_built_roads, 1);
-
-    let mut command = Command::new(
-        PossibleActions::BuildStuff,
-        String::from("key1")
-    );
-    command.target[0] = (Target::Node, Some(0));
-    game.process_action(command).unwrap();
 
     let num_built_nodes = game.board.nodes.iter().fold(
         0, 

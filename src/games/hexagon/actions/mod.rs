@@ -22,17 +22,47 @@ pub fn build_road(
     player_key: String, 
     nodes: & Vec<Node>, 
     roads: &mut Vec<Road>
-) {
+) -> Result<(), &'static str> {
 
-    // TODO: Check for valid road index
+    // Check for valid road index
+    if road_index >= roads.len() {
+        return Err("Cannot build road; invalid road index.");
+    }
 
-    // TODO: Check if there is already a built road on this index
+    // Check if there is already a built road on this index
+    if roads[road_index].player_key != None {
+        return Err("Cannot build road; there is already something there.");
+    }
 
-    // TODO: Do either of the nodes connected by this road contain a building by this player?
+    // Do either of the nodes connected by this road contain a building by this player?
+    let mut no_adjacent_building = true;
+    let (idx1,idx2) = roads[road_index].inds;
+    let some_player_key_clone = Some(player_key.clone());
+    if nodes[idx1].player_key == some_player_key_clone || nodes[idx2].player_key == some_player_key_clone {
+        no_adjacent_building = false;
+    }
 
-     // TODO: Is there an adjacent road owned by this player?
+    // Is there an adjacent road owned by this player?
+    let no_adjacent_road = roads.iter().fold(
+        true,
+        | acc, cv | {
+            let ind_align = 
+                cv.inds.0 == idx1 ||
+                cv.inds.1 == idx1 ||
+                cv.inds.0 == idx2 ||
+                cv.inds.1 == idx2;
+            let player_align = cv.player_key == some_player_key_clone;
+            return acc || (ind_align && player_align);
+        }
+    );
+
+    if no_adjacent_building && no_adjacent_road {
+        return Err("Roads have to be built next to other roads or buildings you own.");
+    }
 
      roads[road_index].player_key = Some(player_key);
+
+     Ok(())
 
 }
 
@@ -71,6 +101,7 @@ pub fn build_node(
     }
 
     // Is there an adjacent road owned by this player?
+    // NOTE: Only check this outside of the setup phase
     if is_setup == false {
         let no_adjacent_roads: bool = roads.iter().fold(
             true,
