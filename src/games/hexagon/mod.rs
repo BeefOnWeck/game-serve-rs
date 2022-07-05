@@ -184,11 +184,12 @@ impl Game for HexagonIsland {
 
                     let nodes = command.target.iter().filter(|t| t.0 == Target::Node);
                     for n in nodes {
-                        build_node(
+                        let status = build_node(
                             n.1.unwrap(), 
                             command.player.clone(), 
                             &mut self.board.nodes,
-                            &self.board.roads
+                            &self.board.roads,
+                            true
                         );
                     }
                     

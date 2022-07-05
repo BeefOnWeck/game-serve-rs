@@ -96,11 +96,48 @@ fn build_on_a_node() {
 
     let node_index = 0;
     let player_key = String::from("key1");
-    build_node(node_index, player_key, &mut board.nodes, &board.roads);
+    let status = build_node(node_index, player_key, &mut board.nodes, &board.roads, true);
 
     let num_built_nodes = board.nodes.iter().fold(
         0, 
         | acc, cv | if cv.player_key != None { acc + 1 } else { acc }
     );
     assert_eq!(num_built_nodes, 1);
+}
+
+#[test]
+fn node_building_errors() {
+    let mut board = GameBoard::new();
+    board.setup(5);
+
+    let node_index = 10000000;
+    let player_key = String::from("key1");
+    let is_setup = true;
+    let status = build_node(node_index, player_key, &mut board.nodes, &board.roads, is_setup);
+    assert_eq!(status, Err("Cannot make building; invalid node index."));
+
+    let node_index = 0;
+    let player_key = String::from("key1");
+    let is_setup = true;
+    let status = build_node(node_index, player_key, &mut board.nodes, &board.roads, is_setup);
+    assert_eq!(status, Ok(()));
+
+    let node_index = 0;
+    let player_key = String::from("key1");
+    let is_setup = true;
+    let status = build_node(node_index, player_key, &mut board.nodes, &board.roads, is_setup);
+    assert_eq!(status, Err("Cannot make building; there is already something there."));
+
+    let node_index = 1;
+    let player_key = String::from("key1");
+    let is_setup = true;
+    let status = build_node(node_index, player_key, &mut board.nodes, &board.roads, is_setup);
+    assert_eq!(status, Err("Cannot make building; you must respect the two-space rule."));
+
+    let node_index = 10;
+    let player_key = String::from("key1");
+    let is_setup = false;
+    let status = build_node(node_index, player_key, &mut board.nodes, &board.roads, is_setup);
+    assert_eq!(status, Err("Cannot make building; after initial setup you must build next to roads that you own."));
+
 }
