@@ -25,6 +25,16 @@ impl ResourceList {
         ResourceList { block: 0, rock: 0, timber: 0, fiber: 0, cereal: 0 }
     }
 
+    pub fn to_array(&self) -> [(Resource, u16); 5] {
+        [
+            (Resource::Block, self.block),
+            (Resource::Rock, self.rock),
+            (Resource::Timber, self.timber),
+            (Resource::Fiber, self.fiber),
+            (Resource::Cereal, self.cereal)
+        ]
+    }
+
     pub fn deposit(&mut self, resource: Resource) -> Result<(),&'static str> {
         match resource {
             Resource::Block => self.block += 1,
@@ -63,6 +73,27 @@ impl ResourceList {
 
         Ok(())
     }
+
+    pub fn check<const N: usize>(&mut self, resources: ResourceArray<N>) -> bool {
+
+        let mut the_bill = ResourceList::new();
+        for resource in resources { let _status = the_bill.deposit(resource); }
+        let bill_array = the_bill.to_array();
+        
+        let mut can_pay_the_bill = true;
+        for (rsrc,amnt) in bill_array {
+            match rsrc {
+                Resource::Block => if self.block < amnt { can_pay_the_bill = false },
+                Resource::Rock => if self.rock < amnt { can_pay_the_bill = false },
+                Resource::Timber => if self.timber < amnt { can_pay_the_bill = false },
+                Resource::Fiber => if self.fiber < amnt { can_pay_the_bill = false },
+                Resource::Cereal => if self.cereal < amnt { can_pay_the_bill = false },
+                Resource::Desert => ()
+            }
+        }
+
+        can_pay_the_bill
+    }
 }
 
 #[cfg(test)]
@@ -96,4 +127,31 @@ fn resource_lists() {
         (0, 0, 0, 1, 1)
     );
 
+}
+
+#[test]
+fn resource_list_errors() {
+    let mut resource_list = ResourceList::new();
+    let attempt = resource_list.deposit(Resource::Desert);
+    assert_eq!(attempt, Err("Can't deposit Desert resources."));
+    let attempt = resource_list.deduct([Resource::Desert]);
+    assert_eq!(attempt, Err("Can't deduct Desert resources."));
+}
+
+#[test]
+fn credit_check() {
+    let mut resource_list = ResourceList::new();
+    let check = resource_list.check([Resource::Block, Resource::Block, Resource::Timber]);
+    assert!(check == false);
+    let _status = resource_list.deposit(Resource::Block);
+    let _status = resource_list.deposit(Resource::Timber);
+    let check = resource_list.check([Resource::Block, Resource::Block, Resource::Timber]);
+    assert!(check == false);
+    let _status = resource_list.deposit(Resource::Block);
+    let check = resource_list.check([Resource::Block, Resource::Block, Resource::Timber]);
+    assert!(check == true);
+    let _status = resource_list.deposit(Resource::Block);
+    let _status = resource_list.deposit(Resource::Timber);
+    let check = resource_list.check([Resource::Block, Resource::Block, Resource::Timber]);
+    assert!(check == true);
 }
