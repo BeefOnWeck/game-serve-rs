@@ -12,7 +12,7 @@ mod resources;
 use actions::{ PossibleActions, roll_dice, build_road };
 use board::{ GameBoard };
 use colo::get_player_color;
-use resources::{ ResourceList };
+use resources::{ Resource, ResourceList };
 
 use self::actions::build_node;
 
@@ -173,26 +173,30 @@ impl Game for HexagonIsland {
                     // 3. Check credit
                     // 4. If check passes, build
                     // 5. If build passes, deduct cost
-                    // let resources = self.player_resources.get_mut(&command.player).unwrap();
+                    let resources = self.player_resources.get_mut(&command.player).unwrap();
                     let roads = command.target.iter().filter(|t| t.0 == Target::Road);
                     for r in roads {
-                        let _status = build_road(
+                        resources.check([Resource::Block, Resource::Timber])?;
+                        build_road(
                             r.1.unwrap(), 
                             command.player.clone(), 
                             &self.board.nodes,
                             &mut self.board.roads
-                        );
+                        )?;
+                        resources.deduct([Resource::Block, Resource::Timber])?;
                     }
 
                     let nodes = command.target.iter().filter(|t| t.0 == Target::Node);
                     for n in nodes {
-                        let _status = build_node(
+                        resources.check([Resource::Block, Resource::Timber, Resource::Fiber, Resource::Cereal])?;
+                        build_node(
                             n.1.unwrap(), 
                             command.player.clone(), 
                             &mut self.board.nodes,
                             &self.board.roads,
                             true
-                        );
+                        )?;
+                        resources.deduct([Resource::Block, Resource::Timber, Resource::Fiber, Resource::Cereal])?;
                     }
                     
                     Ok(self)

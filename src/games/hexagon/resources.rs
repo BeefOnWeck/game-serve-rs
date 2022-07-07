@@ -74,7 +74,7 @@ impl ResourceList {
         Ok(())
     }
 
-    pub fn check<const N: usize>(&mut self, resources: ResourceArray<N>) -> bool {
+    pub fn check<const N: usize>(&mut self, resources: ResourceArray<N>) -> Result<(),&'static str> {
 
         let mut the_bill = ResourceList::new();
         for resource in resources { let _status = the_bill.deposit(resource); }
@@ -92,7 +92,8 @@ impl ResourceList {
             }
         }
 
-        can_pay_the_bill
+        if can_pay_the_bill { Ok(()) }
+        else { Err("Not enough resources to build.") }
     }
 }
 
@@ -142,16 +143,16 @@ fn resource_list_errors() {
 fn credit_check() {
     let mut resource_list = ResourceList::new();
     let check = resource_list.check([Resource::Block, Resource::Block, Resource::Timber]);
-    assert!(check == false);
+    assert_eq!(check, Err("Not enough resources to build."));
     let _status = resource_list.deposit(Resource::Block);
     let _status = resource_list.deposit(Resource::Timber);
     let check = resource_list.check([Resource::Block, Resource::Block, Resource::Timber]);
-    assert!(check == false);
+    assert_eq!(check, Err("Not enough resources to build."));
     let _status = resource_list.deposit(Resource::Block);
     let check = resource_list.check([Resource::Block, Resource::Block, Resource::Timber]);
-    assert!(check == true);
+    assert_eq!(check, Ok(()));
     let _status = resource_list.deposit(Resource::Block);
     let _status = resource_list.deposit(Resource::Timber);
     let check = resource_list.check([Resource::Block, Resource::Block, Resource::Timber]);
-    assert!(check == true);
+    assert_eq!(check, Ok(()));
 }
