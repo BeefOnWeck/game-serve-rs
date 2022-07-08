@@ -91,3 +91,13 @@ fn should_find_neighboring_nodes() {
     let node_indices = board.find_neighboring_nodes(hex_idx);
     assert_eq!(node_indices, [1, 2, 6, 7, 8, 9]);
 }
+
+#[test]
+fn should_find_neighboring_hexagons() {
+    let mut board = GameBoard::new();
+    board.setup(5);
+
+    let node_idx = 0;
+    let hexagon_indices = board.find_neighboring_hexagons(node_idx);
+    assert_eq!(hexagon_indices, [0, 3, 4]);
+}

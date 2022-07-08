@@ -269,12 +269,12 @@ impl GameBoard {
         let neighboring_nodes_indices = self.nodes.iter().enumerate().fold(
             Vec::new(),
             | mut acc, (n,cv) | {
-                let coordinate_matches = self.hexagons[hex_idx].vertices.iter().any(
+                let any_matches = self.hexagons[hex_idx].vertices.iter().any(
                     | v | {
                         v.x == cv.loc.x && v.y == cv.loc.y
                     }
                 );
-                if coordinate_matches { acc.push(n) }
+                if any_matches { acc.push(n) }
                 acc
             }
         );
@@ -283,7 +283,21 @@ impl GameBoard {
     }
 
     pub fn find_neighboring_hexagons(&self, node_idx: usize) -> Vec<usize> {
-        vec![0]
+        let neighboring_hexagon_indices = self.hexagons.iter().enumerate().fold(
+            Vec::new(),
+            | mut acc, (n,cv) | {
+                let any_matches = cv.vertices.iter().any(
+                    | v | {
+                        v.x == self.nodes[node_idx].loc.x && 
+                        v.y == self.nodes[node_idx].loc.y
+                    }
+                );
+                if any_matches { acc.push(n) }
+                acc
+            }
+        );
+
+        neighboring_hexagon_indices
     }
 
 }
