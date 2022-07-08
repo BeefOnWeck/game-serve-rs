@@ -156,10 +156,7 @@ fn build_nodes_and_roads() {
     assert_eq!(attempt, Err("Not enough resources to build."));
 
     let resources = game.player_resources.get_mut("key1").unwrap();
-    let _status = resources.deposit(Resource::Block);
-    let _status = resources.deposit(Resource::Timber);
-    let _status = resources.deposit(Resource::Fiber);
-    let _status = resources.deposit(Resource::Cereal);
+    let _status = resources.deposit([Resource::Block, Resource::Timber, Resource::Fiber, (Resource::Cereal)]);
 
     let mut command = Command::new(
         PossibleActions::BuildStuff,
@@ -177,8 +174,7 @@ fn build_nodes_and_roads() {
     assert_eq!(attempt, Err("Not enough resources to build."));
 
     let resources = game.player_resources.get_mut("key1").unwrap();
-    let _status = resources.deposit(Resource::Block);
-    let _status = resources.deposit(Resource::Timber);
+    let _status = resources.deposit([Resource::Block, Resource::Timber]);
 
     let mut command = Command::new(
         PossibleActions::BuildStuff,
