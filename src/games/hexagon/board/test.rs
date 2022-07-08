@@ -77,3 +77,17 @@ fn board_setup() {
     assert_eq!(number_counts, (1,1,2,2,2,2,0,2,2,2,2,1));
     assert_eq!(bad, 0);
 }
+
+#[test]
+fn should_find_neighboring_nodes() {
+    let mut board = GameBoard::new();
+    board.setup(5);
+
+    let hex_idx = 0;
+    let node_indices = board.find_neighboring_nodes(hex_idx);
+    assert_eq!(node_indices, [0, 1, 2, 3, 4, 5]);
+
+    let hex_idx = 1;
+    let node_indices = board.find_neighboring_nodes(hex_idx);
+    assert_eq!(node_indices, [1, 2, 6, 7, 8, 9]);
+}
