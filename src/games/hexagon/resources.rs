@@ -1,5 +1,5 @@
 
-#[derive(Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub enum Resource {
     Block,
     Rock,
@@ -11,11 +11,11 @@ pub enum Resource {
 
 #[derive(Debug, PartialEq)]
 pub struct ResourceList {
-    block: u16,
-    rock: u16,
-    timber: u16,
-    fiber: u16,
-    cereal: u16
+    pub block: u16,
+    pub rock: u16,
+    pub timber: u16,
+    pub fiber: u16,
+    pub cereal: u16
 }
 
 type ResourceArray<const N: usize> = [Resource; N];

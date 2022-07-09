@@ -165,6 +165,19 @@ impl Game for HexagonIsland {
             Phase::Setup | Phase::Play => match command.action {
                 PossibleActions::RollDice => {
                     self.roll_result = roll_dice();
+                    let roll_sum = self.roll_result.0 + self.roll_result.1;
+                    match roll_sum {
+                        7 => (), // TODO: Move the scorpion
+                        _ => {
+                            let spoils = self.board.collect_resources(roll_sum);
+                            for (player_key, resource) in spoils {
+                                let resources = self.player_resources.get_mut(&player_key).unwrap();
+                                resources.deposit([resource])?;
+                            }
+                        }
+                    }
+                    // TODO: Assign resources to players based upon the rolled outcome
+                    // TODO: Handle rolls of 7
                     Ok(self)
                 },
                 PossibleActions::BuildStuff => {

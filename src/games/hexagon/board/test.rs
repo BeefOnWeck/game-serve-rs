@@ -1,4 +1,6 @@
 use super::*;
+use crate::games::hexagon::actions::roll_dice;
+use crate::games::hexagon::resources::{ Resource, ResourceList };
 
 #[test]
 fn board_setup() {
@@ -55,7 +57,7 @@ fn board_setup() {
                 mut twelve
             ) = num_cnt;
             match hex.number {
-                -1 => desert += 1,
+                1 => desert += 1,
                 2 => two += 1,
                 3 => three += 1,
                 4 => four += 1,
@@ -100,4 +102,62 @@ fn should_find_neighboring_hexagons() {
     let node_idx = 0;
     let hexagon_indices = board.find_neighboring_hexagons(node_idx);
     assert_eq!(hexagon_indices, [0, 3, 4]);
+}
+
+#[test]
+fn should_collect_rolled_resources() {
+    let mut board = GameBoard::new();
+    board.setup(5);
+
+    // Build a village on each node
+    let player_key = String::from("key_1");
+    for ind in 0..board.nodes.len() {
+        board.nodes[ind].player_key = Some(player_key.clone());
+        board.nodes[ind].building_type = BuildingType::Village;
+    }
+
+    // Roll the dice
+    let roll_result = roll_dice();
+    let roll_sum = roll_result.0 + roll_result.1;
+
+    // Find out what resources were rolled
+    let mut rolled_resources = board.hexagons.iter().fold(
+        ResourceList::new(),
+        | mut acc, cv | {
+            if cv.number == roll_sum {
+                match cv.resource {
+                    Resource::Block => acc.block += 1,
+                    Resource::Rock => acc.rock += 1,
+                    Resource::Timber => acc.timber += 1,
+                    Resource::Fiber => acc.fiber += 1,
+                    Resource::Cereal => acc.cereal += 1,
+                    Resource::Desert => ()
+                }
+            }
+            acc
+        }
+    );
+
+    // Each hexagon that matches the roll should contribute six resources
+    rolled_resources.block *= 6;
+    rolled_resources.rock *= 6;
+    rolled_resources.timber *= 6;
+    rolled_resources.fiber *= 6;
+    rolled_resources.cereal *= 6;
+
+    // Call collect_resources() and use this to decrement rolled_resources
+    let spoils = board.collect_resources(roll_sum);
+    for (_player_key, resource) in spoils {
+        match resource {
+            Resource::Block => rolled_resources.block -= 1,
+            Resource::Rock => rolled_resources.rock -= 1,
+            Resource::Timber => rolled_resources.timber -= 1,
+            Resource::Fiber => rolled_resources.fiber -= 1,
+            Resource::Cereal => rolled_resources.cereal -= 1,
+            Resource::Desert => ()
+        }
+    }
+
+    assert_eq!(rolled_resources, ResourceList::new());
+
 }

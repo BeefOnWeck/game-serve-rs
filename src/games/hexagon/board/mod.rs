@@ -13,13 +13,13 @@ pub struct Coordinate {
 #[derive(Debug, PartialEq)]
 pub struct Centroid {
     loc: Coordinate,
-    number: i16
+    number: u8
 }
 
 #[derive(Debug, PartialEq)]
 pub struct Hexagon {
     pub vertices: Vec<Coordinate>,
-    pub number: i16,
+    pub number: u8,
     pub resource: Resource
 }
 
@@ -155,7 +155,7 @@ impl GameBoard {
         let num_twelve = f64::round(twelve_ratio * num_centroids) as u32;
 
         // Generate a randomly-shuffed vector of numbers
-        let mut numbers = Vec::<i16>::new();
+        let mut numbers = Vec::<u8>::new();
         for _ in 0..num_two { numbers.push(2); }
         for _ in 0..num_three { numbers.push(3); }
         for _ in 0..num_four { numbers.push(4); }
@@ -166,12 +166,12 @@ impl GameBoard {
         for _ in 0..num_ten { numbers.push(10); }
         for _ in 0..num_eleven { numbers.push(11); }
         for _ in 0..num_twelve { numbers.push(12); }
-        numbers.push(-1); // for the Desert
+        numbers.push(1); // for the Desert
         numbers.shuffle(&mut rng);
 
         // Make sure the desert and -1 are at the same index
         let desert_index = resources.iter().position(|p| *p == Resource::Desert).unwrap();
-        let minus_one_index = numbers.iter().position(|p| *p == -1).unwrap();
+        let minus_one_index = numbers.iter().position(|p| *p == 1).unwrap();
         if desert_index != minus_one_index {
             numbers.swap(desert_index, minus_one_index);
         }
@@ -298,6 +298,28 @@ impl GameBoard {
         );
 
         neighboring_hexagon_indices
+    }
+
+    pub fn collect_resources(&self, roll_sum: u8) -> Vec<(String,Resource)> {
+        let mut spoils = Vec::new();
+
+        let rolled_hexagons: Vec<(usize,Resource)> = self.hexagons.iter().enumerate().filter(
+            | (_ind, hex) | { hex.number == roll_sum }
+        ).map(
+            | (ind, hex) | { (ind, hex.resource) }
+        ).collect();
+        
+        for (ind, resource) in rolled_hexagons {
+            let neighboring_nodes = self.find_neighboring_nodes(ind);
+            for nn in neighboring_nodes {
+                match &self.nodes[nn].player_key {
+                    Some(player) => spoils.push((player.clone(), resource)),
+                    None => ()
+                }
+            }
+        }
+
+        spoils
     }
 
 }
