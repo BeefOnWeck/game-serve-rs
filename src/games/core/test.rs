@@ -29,7 +29,7 @@ fn keep_track_of_round() {
 fn reset_the_game() {
     let mut game = Core::new();
     game.next_phase().next_phase().next_round();
-    game.add_player("key", "name", "socket_id");
+    game.add_player("key", "name", "socket_id").unwrap();
     assert_eq!(game.phase, Phase::Play);
     assert_eq!(game.round, 1);
     assert_eq!(game.players.list.len(), 1);
@@ -43,7 +43,7 @@ fn reset_the_game() {
 fn add_players() {
     let mut game = Core::new();
     assert_eq!(game.players.list.len(), 0);
-    game.add_player("key", "name", "socket_id");
+    game.add_player("key", "name", "socket_id").unwrap();
     assert_eq!(game.players.list.len(), 1);
     assert_eq!(game.players.list[0].key.as_str(), "key");
     assert_eq!(game.players.list[0].name.as_str(), "name");
@@ -75,7 +75,7 @@ fn next_player() {
         .add_player("key1", "name1", "socket_id1").unwrap()
         .add_player("key2", "name2", "socket_id2").unwrap()
         .add_player("key3", "name3", "socket_id3").unwrap()
-        .add_player("key4", "name4", "socket_id4");
+        .add_player("key4", "name4", "socket_id4").unwrap();
     assert_eq!(game.players.cardinality, 4);
     assert_eq!(game.players.active_key, Some(String::from("key1")));
     game.next_player().unwrap(); // NOTE: Using unwrap() because function returns a Result
@@ -96,7 +96,7 @@ fn game_status() {
         .add_player("key1", "name1", "socket_id1").unwrap()
         .add_player("key2", "name2", "socket_id2").unwrap()
         .add_player("key3", "name3", "socket_id3").unwrap()
-        .add_player("key4", "name4", "socket_id4");
+        .add_player("key4", "name4", "socket_id4").unwrap();
     let game_status = game.get_game_status();
     assert_eq!(
         game_status,

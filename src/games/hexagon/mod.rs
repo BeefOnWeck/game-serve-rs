@@ -9,7 +9,7 @@ mod board;
 mod colo;
 mod resources;
 
-use actions::{ PossibleActions, roll_dice, build_road };
+use actions::{ PossibleActions, Target, Command, roll_dice, build_road };
 use board::{ GameBoard };
 use colo::get_player_color;
 use resources::{ Resource, ResourceList };
@@ -27,29 +27,6 @@ struct Config {
     num_players: usize,
     score_to_win: u8,
     game_board_width: u8
-}
-
-#[derive(Copy, Clone, PartialEq)]
-enum Target {
-    Road,
-    Node,
-    None
-}
-
-struct Command {
-    pub action: PossibleActions,
-    player: String,
-    pub target: [( Target, Option<usize> ); 5]
-}
-
-impl Command {
-    pub fn new(action: PossibleActions, player: String) -> Command {
-        Command { 
-            action, 
-            player: player.clone(),
-            target: [( Target::None, None ); 5]
-        }
-    }
 }
 
 #[derive(Debug, PartialEq)]
@@ -120,6 +97,7 @@ impl Game for HexagonIsland {
         if idx == self.config.num_players {
             return Err("Cannot add player; exceeds maximum number of players.");
         }
+
         self.players.add_player(key, name, socket_id);
         self.player_colors.insert(
             String::from(key),
@@ -160,10 +138,68 @@ impl Game for HexagonIsland {
         }
     }
 
+    fn configure_game(&mut self, config: Self::Config) -> Result<&mut Self, &'static str> {
+        match self.phase {
+            Phase::Boot => {
+                self.config = config;
+                Ok(self)
+            },
+            _ => Err("Cannot configure game outside of boot phase!")
+        }
+    }
+
     fn process_action(&mut self, command: Self::Command) -> Result<&mut HexagonIsland, &'static str> {
         // TODO: Throw error if player tries an action out of turn (need to augment Command)
         match self.phase {
-            Phase::Setup | Phase::Play => match command.action {
+            Phase::Setup => match command.action {
+                PossibleActions::PlaceVillageAndRoad => {
+                    // 1. Check that the command target has one village and one road
+                    // 2. Check to ensure the node and road are adjacent
+                    // 3. Try to build the village first
+                    // 4. Try to build the road second
+                    let (num_nodes, node_index, num_roads, road_index) = command.target.iter().fold(
+                        (0,0,0,0),
+                        | mut acc, cv | {
+                            match cv.0 {
+                                Target::Node => {
+                                    acc.0 += 1;
+                                    acc.1 = cv.1.unwrap();
+                                },
+                                Target::Road => {
+                                    acc.2 += 1;
+                                    acc.3 = cv.1.unwrap();
+                                },
+                                Target::None => ()
+                            }
+                            acc
+                        }
+                    );
+                    if num_nodes != 1 || num_roads != 1 {
+                        return Err("Must select one node and one road during setup.");
+                    }
+                    let adj_nodes = self.board.roads[road_index].inds;
+                    if adj_nodes.0 != node_index && adj_nodes.1 != node_index {
+                        return Err("Selected node and road must be next to each other.");
+                    }
+                    build_node(
+                        node_index, 
+                        command.player.clone(), 
+                        &mut self.board.nodes,
+                        &self.board.roads,
+                        true
+                    )?;
+                    build_road(
+                        road_index, 
+                        command.player.clone(), 
+                        &self.board.nodes,
+                        &mut self.board.roads,
+                        true
+                    )?;
+                    Ok(self)
+                },
+                _ => Err("That is not an allowed action during the Setup Phase.")
+            }, 
+            Phase::Play => match command.action {
                 PossibleActions::RollDice => {
                     self.roll_result = roll_dice();
                     let roll_sum = self.roll_result.0 + self.roll_result.1;
@@ -177,7 +213,6 @@ impl Game for HexagonIsland {
                             }
                         }
                     }
-                    // TODO: Assign resources to players based upon the rolled outcome
                     // TODO: Handle rolls of 7
                     Ok(self)
                 },
@@ -195,7 +230,8 @@ impl Game for HexagonIsland {
                             r.1.unwrap(), 
                             command.player.clone(), 
                             &self.board.nodes,
-                            &mut self.board.roads
+                            &mut self.board.roads,
+                            false
                         )?;
                         resources.deduct([Resource::Block, Resource::Timber])?;
                     }
@@ -208,26 +244,17 @@ impl Game for HexagonIsland {
                             command.player.clone(), 
                             &mut self.board.nodes,
                             &self.board.roads,
-                            true
+                            false
                         )?;
                         resources.deduct([Resource::Block, Resource::Timber, Resource::Fiber, Resource::Cereal])?;
                     }
                     
                     Ok(self)
                 }
-                PossibleActions::None => Ok(self)
+                PossibleActions::None => Ok(self),
+                _ => Err("That action is not supported during the Play phase.")
             },
-            _ => Err("Can only take action during the Setup or Play phases!")
-        }
-    }
-
-    fn configure_game(&mut self, config: Self::Config) -> Result<&mut Self, &'static str> {
-        match self.phase {
-            Phase::Boot => {
-                self.config = config;
-                Ok(self)
-            },
-            _ => Err("Cannot configure game outside of boot phase!")
+            _ => Err("Can only take action during the Setup or Play phases.")
         }
     }
 }

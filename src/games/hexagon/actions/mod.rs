@@ -4,9 +4,33 @@ use super::board::{ Road, Node, BuildingType };
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum PossibleActions {
+    PlaceVillageAndRoad,
     RollDice,
     BuildStuff,
     None
+}
+
+#[derive(Copy, Clone, PartialEq)]
+pub enum Target {
+    Road,
+    Node,
+    None
+}
+
+pub struct Command {
+    pub action: PossibleActions,
+    pub player: String,
+    pub target: [( Target, Option<usize> ); 5] // TODO: Const Generic
+}
+
+impl Command {
+    pub fn new(action: PossibleActions, player: String) -> Command {
+        Command { 
+            action, 
+            player: player.clone(),
+            target: [( Target::None, None ); 5]
+        }
+    }
 }
 
 pub fn roll_dice() -> (u8,u8) {
@@ -21,7 +45,8 @@ pub fn build_road(
     road_index: usize, 
     player_key: String, 
     nodes: & Vec<Node>, 
-    roads: &mut Vec<Road>
+    roads: &mut Vec<Road>,
+    is_setup: bool
 ) -> Result<(), &'static str> {
 
     // Check for valid road index
@@ -34,30 +59,32 @@ pub fn build_road(
         return Err("Cannot build road; there is already something there.");
     }
 
-    // Do either of the nodes connected by this road contain a building by this player?
-    let mut no_adjacent_building = true;
-    let (idx1,idx2) = roads[road_index].inds;
-    let some_player_key_clone = Some(player_key.clone());
-    if nodes[idx1].player_key == some_player_key_clone || nodes[idx2].player_key == some_player_key_clone {
-        no_adjacent_building = false;
-    }
-
-    // Is there an adjacent road owned by this player?
-    let no_adjacent_road = roads.iter().fold(
-        true,
-        | acc, cv | {
-            let ind_align = 
-                cv.inds.0 == idx1 ||
-                cv.inds.1 == idx1 ||
-                cv.inds.0 == idx2 ||
-                cv.inds.1 == idx2;
-            let player_align = cv.player_key == some_player_key_clone;
-            return acc || (ind_align && player_align);
+    if is_setup == false {
+        // Do either of the nodes connected by this road contain a building by this player?
+        let mut no_adjacent_building = true;
+        let (idx1,idx2) = roads[road_index].inds;
+        let some_player_key_clone = Some(player_key.clone());
+        if nodes[idx1].player_key == some_player_key_clone || nodes[idx2].player_key == some_player_key_clone {
+            no_adjacent_building = false;
         }
-    );
 
-    if no_adjacent_building && no_adjacent_road {
-        return Err("Roads have to be built next to other roads or buildings you own.");
+        // Is there an adjacent road owned by this player?
+        let no_adjacent_road = roads.iter().fold(
+            true,
+            | acc, cv | {
+                let ind_align = 
+                    cv.inds.0 == idx1 ||
+                    cv.inds.1 == idx1 ||
+                    cv.inds.0 == idx2 ||
+                    cv.inds.1 == idx2;
+                let player_align = cv.player_key == some_player_key_clone;
+                return acc || (ind_align && player_align);
+            }
+        );
+
+        if no_adjacent_building && no_adjacent_road {
+            return Err("Roads have to be built next to other roads or buildings you own.");
+        }
     }
 
      roads[road_index].player_key = Some(player_key);

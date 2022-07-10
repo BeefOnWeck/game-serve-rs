@@ -78,7 +78,7 @@ fn build_a_road() {
 
     let road_index = 0;
     let player_key = String::from("key1");
-    let _status = build_road(road_index, player_key, &board.nodes, &mut board.roads);
+    let _status = build_road(road_index, player_key, &board.nodes, &mut board.roads, false);
 
     let num_built_roads = board.roads.iter().fold(
         0, 
@@ -153,7 +153,7 @@ fn road_building_errors() {
 
     let road_index = 10000000;
     let player_key = String::from("key1");
-    let status = build_road(road_index, player_key, &board.nodes, &mut board.roads);
+    let status = build_road(road_index, player_key, &board.nodes, &mut board.roads, false);
     assert_eq!(status, Err("Cannot build road; invalid road index."));
 
     let node_index = 0;
@@ -163,21 +163,21 @@ fn road_building_errors() {
 
     let road_index = 0;
     let player_key = String::from("key1");
-    let status = build_road(road_index, player_key, &board.nodes, &mut board.roads);
+    let status = build_road(road_index, player_key, &board.nodes, &mut board.roads, false);
     assert_eq!(status, Ok(()));
 
     let road_index = 0;
     let player_key = String::from("key1");
-    let status = build_road(road_index, player_key, &board.nodes, &mut board.roads);
+    let status = build_road(road_index, player_key, &board.nodes, &mut board.roads, false);
     assert_eq!(status, Err("Cannot build road; there is already something there."));
 
     let road_index = 10;
     let player_key = String::from("key1");
-    let status = build_road(road_index, player_key, &board.nodes, &mut board.roads);
+    let status = build_road(road_index, player_key, &board.nodes, &mut board.roads, false);
     assert_eq!(status, Err("Roads have to be built next to other roads or buildings you own."));
 
     let road_index = 1;
     let player_key = String::from("key1");
-    let status = build_road(road_index, player_key, &board.nodes, &mut board.roads);
+    let status = build_road(road_index, player_key, &board.nodes, &mut board.roads, false);
     assert_eq!(status, Ok(()));
 }
