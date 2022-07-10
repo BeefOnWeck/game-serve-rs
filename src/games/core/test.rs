@@ -55,7 +55,7 @@ fn active_player() {
     let mut game = Core::new();
     assert_eq!(game.players.list.len(), 0);
     assert_eq!(game.players.active_key, None);
-    game.add_player("key1", "name1", "socket_id1").add_player("key2", "name2", "socket_id2");
+    game.add_player("key1", "name1", "socket_id1").unwrap().add_player("key2", "name2", "socket_id2").unwrap();
     assert_eq!(game.players.list.len(), 2);
     assert_eq!(game.players.active_key, Some(String::from("key1")));
     game.set_active_player("key2").unwrap(); // NOTE: Using unwrap() because function returns a Result
@@ -72,9 +72,9 @@ fn active_player() {
 fn next_player() {
     let mut game = Core::new();
     game
-        .add_player("key1", "name1", "socket_id1")
-        .add_player("key2", "name2", "socket_id2")
-        .add_player("key3", "name3", "socket_id3")
+        .add_player("key1", "name1", "socket_id1").unwrap()
+        .add_player("key2", "name2", "socket_id2").unwrap()
+        .add_player("key3", "name3", "socket_id3").unwrap()
         .add_player("key4", "name4", "socket_id4");
     assert_eq!(game.players.cardinality, 4);
     assert_eq!(game.players.active_key, Some(String::from("key1")));
@@ -93,9 +93,9 @@ fn game_status() {
     let mut game = Core::new();
     game.next_phase().next_phase().next_round();
     game
-        .add_player("key1", "name1", "socket_id1")
-        .add_player("key2", "name2", "socket_id2")
-        .add_player("key3", "name3", "socket_id3")
+        .add_player("key1", "name1", "socket_id1").unwrap()
+        .add_player("key2", "name2", "socket_id2").unwrap()
+        .add_player("key3", "name3", "socket_id3").unwrap()
         .add_player("key4", "name4", "socket_id4");
     let game_status = game.get_game_status();
     assert_eq!(

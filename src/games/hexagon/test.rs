@@ -112,8 +112,8 @@ fn player_color() {
     };
     game.configure_game(config).unwrap();
 
-    game.add_player("key1", "name1", "socket_id1")
-        .add_player("key2", "name2", "socket_id2");
+    game.add_player("key1", "name1", "socket_id1").unwrap()
+        .add_player("key2", "name2", "socket_id2").unwrap();
 
     let mut expected_colors: HashMap<String, String> = HashMap::new();
     expected_colors.insert(String::from("key1"), String::from("#DC143C"));
@@ -133,7 +133,7 @@ fn build_nodes_and_roads() {
     };
     game.configure_game(config).unwrap();
 
-    game.add_player("key1", "name1", "socket_id1")
+    game.add_player("key1", "name1", "socket_id1").unwrap()
         .add_player("key2", "name2", "socket_id2");
 
     let num_built_nodes = game.board.nodes.iter().fold(
@@ -194,4 +194,14 @@ fn build_nodes_and_roads() {
         | acc, cv | if cv.player_key != None { acc + 1 } else { acc }
     );
     assert_eq!(num_built_nodes, 1);
+}
+
+#[test]
+fn too_many_players() {
+    let mut game = HexagonIsland::new();
+
+    game.add_player("key1", "name1", "socket_id1").unwrap();
+    game.add_player("key2", "name2", "socket_id2").unwrap();
+    let attempt = game.add_player("key3", "name3", "socket_id3");
+    assert_eq!(attempt, Err("Cannot add player; exceeds maximum number of players."));
 }
