@@ -1,3 +1,4 @@
+use std::rc::Rc;
 use super::*;
 use playe::Player;
 
@@ -54,18 +55,18 @@ fn add_players() {
 fn active_player() {
     let mut game = Core::new();
     assert_eq!(game.players.list.len(), 0);
-    assert_eq!(game.players.active_key, None);
+    assert_eq!(game.players.active_player, None);
     game.add_player("key1", "name1", "socket_id1").unwrap().add_player("key2", "name2", "socket_id2").unwrap();
     assert_eq!(game.players.list.len(), 2);
-    assert_eq!(game.players.active_key, Some(String::from("key1")));
+    assert_eq!(game.players.active_player.as_ref().unwrap().key, String::from("key1"));
     game.set_active_player("key2").unwrap(); // NOTE: Using unwrap() because function returns a Result
     // println!("{:?}", game);
-    assert_eq!(game.players.active_key, Some(String::from("key2")));
+    assert_eq!(game.players.active_player.as_ref().unwrap().key, String::from("key2"));
     let attempt = game.set_active_player("not_a_valid_key"); // NOTE: No unwrap() to avoid a panic
     // println!("{:?}", attempt);
     assert_eq!(attempt, Err("Player key not found!"));
     game.reset();
-    assert_eq!(game.players.active_key, None);
+    assert_eq!(game.players.active_player, None);
 }
 
 #[test]
@@ -77,15 +78,15 @@ fn next_player() {
         .add_player("key3", "name3", "socket_id3").unwrap()
         .add_player("key4", "name4", "socket_id4").unwrap();
     assert_eq!(game.players.cardinality, 4);
-    assert_eq!(game.players.active_key, Some(String::from("key1")));
+    assert_eq!(game.players.active_player.as_ref().unwrap().key, String::from("key1"));
     game.next_player().unwrap(); // NOTE: Using unwrap() because function returns a Result
-    assert_eq!(game.players.active_key, Some(String::from("key2")));
+    assert_eq!(game.players.active_player.as_ref().unwrap().key, String::from("key2"));
     game.next_player().unwrap();
-    assert_eq!(game.players.active_key, Some(String::from("key3")));
+    assert_eq!(game.players.active_player.as_ref().unwrap().key, String::from("key3"));
     game.next_player().unwrap();
-    assert_eq!(game.players.active_key, Some(String::from("key4")));
+    assert_eq!(game.players.active_player.as_ref().unwrap().key, String::from("key4"));
     game.next_player().unwrap();
-    assert_eq!(game.players.active_key, Some(String::from("key1")));
+    assert_eq!(game.players.active_player.as_ref().unwrap().key, String::from("key1"));
 }
 
 #[test]
@@ -98,35 +99,36 @@ fn game_status() {
         .add_player("key3", "name3", "socket_id3").unwrap()
         .add_player("key4", "name4", "socket_id4").unwrap();
     let game_status = game.get_game_status();
+    let player_list = vec![
+        Rc::new( Player { 
+            key: String::from("key1"), 
+            name: String::from("name1"), 
+            socket_id: String::from("socket_id1") 
+        } ),
+        Rc::new( Player { 
+            key: String::from("key2"),
+            name: String::from("name2"),
+            socket_id: String::from("socket_id2")
+        } ),
+        Rc::new( Player { 
+            key: String::from("key3"),
+            name: String::from("name3"),
+            socket_id: String::from("socket_id3")
+        } ),
+        Rc::new( Player { 
+            key: String::from("key4"),
+            name: String::from("name4"),
+            socket_id: String::from("socket_id4")
+        } )
+    ];
     assert_eq!(
         game_status,
         Core {
             phase: Phase::Play,
             round: 1,
             players: Players {
-                list: vec![
-                    Player { 
-                        key: String::from("key1"), 
-                        name: String::from("name1"), 
-                        socket_id: String::from("socket_id1") 
-                    },
-                    Player { 
-                        key: String::from("key2"),
-                        name: String::from("name2"),
-                        socket_id: String::from("socket_id2")
-                    },
-                    Player { 
-                        key: String::from("key3"),
-                        name: String::from("name3"),
-                        socket_id: String::from("socket_id3")
-                    },
-                    Player { 
-                        key: String::from("key4"),
-                        name: String::from("name4"),
-                        socket_id: String::from("socket_id4")
-                    }
-                ],
-                active_key: Some(String::from("key1")),
+                list: player_list.iter().map(| p | { Rc::clone(&p) }).collect(),
+                active_player: Some(Rc::clone(&player_list[0])),
                 cardinality: 4,
             },
             possible_actions: PossibleActions::None,
@@ -153,7 +155,7 @@ fn process_actions() {
         round: 0, 
         players: Players { 
             list: [].to_vec(), 
-            active_key: None, 
+            active_player: None, 
             cardinality: 0
         },
         possible_actions: PossibleActions::None, 
@@ -178,7 +180,7 @@ fn game_configuration() {
         round: 0, 
         players: Players { 
             list: [].to_vec(), 
-            active_key: None, 
+            active_player: None, 
             cardinality: 0
         },
         possible_actions: PossibleActions::None, 

@@ -10,7 +10,7 @@ fn initial_state() {
             round: 0,
             players: Players {
                 list: Vec::new(),
-                active_key: None,
+                active_player: None,
                 cardinality: 0,
             },
             possible_actions: PossibleActions::None,
@@ -70,7 +70,7 @@ fn should_reset() {
             round: 0,
             players: Players {
                 list: Vec::new(),
-                active_key: None,
+                active_player: None,
                 cardinality: 0,
             },
             possible_actions: PossibleActions::None,
@@ -233,6 +233,8 @@ fn game_progression() {
     let attempt = game.process_action(command);
     assert_eq!(attempt, Err("Must select one node and one road during setup."));
 
+    // TODO: Check that it is player 1's turn
+
     let mut command = Command::new(
         PossibleActions::PlaceVillageAndRoad,
         String::from("key1")
@@ -240,6 +242,8 @@ fn game_progression() {
     command.target[0] = (Target::Node, Some(0));
     command.target[1] = (Target::Road, Some(0));
     game.process_action(command).unwrap();
+
+    // TODO: Check that it is player 2's turn
 
     let mut command = Command::new(
         PossibleActions::PlaceVillageAndRoad,
@@ -249,6 +253,8 @@ fn game_progression() {
     command.target[1] = (Target::Road, Some(10));
     game.process_action(command).unwrap();
 
+    // TODO: Check that it is player 2's turn again
+
     let mut command = Command::new(
         PossibleActions::PlaceVillageAndRoad,
         String::from("key2")
@@ -257,6 +263,8 @@ fn game_progression() {
     command.target[1] = (Target::Road, Some(25));
     game.process_action(command).unwrap();
 
+    // TODO: Check that it is player 1's turn
+
     let mut command = Command::new(
         PossibleActions::PlaceVillageAndRoad,
         String::from("key1")
@@ -264,5 +272,8 @@ fn game_progression() {
     command.target[0] = (Target::Node, Some(4));
     command.target[1] = (Target::Road, Some(5));
     game.process_action(command).unwrap();
+
+    // TODO: Check that it is the play phase
+    // TODO: Check that it is still player 1's turn
 
 }
