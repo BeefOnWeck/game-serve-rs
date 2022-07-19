@@ -190,7 +190,7 @@ impl Game for HexagonIsland {
                     )?;
                     build_road(
                         road_index, 
-                        command.player.clone(), 
+                        command.player.clone(),
                         &self.board.nodes,
                         &mut self.board.roads,
                         true

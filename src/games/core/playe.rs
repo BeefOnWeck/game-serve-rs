@@ -53,7 +53,10 @@ impl Players {
     }
     
     pub fn next_player(&mut self) -> Result<&mut Players, &'static str> {
-        let active_player = self.active_player.as_ref().unwrap(); // Why does this work?
+        let active_player = match self.active_player.as_ref() {
+            Some(ap) => ap,
+            None => return Err("There is no active player.")
+        };
         let active_player_index = self.list.iter().position(|p| p == active_player);
         match active_player_index {
             Some(idx) => {

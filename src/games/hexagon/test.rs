@@ -225,6 +225,9 @@ fn game_progression() {
 
     assert_eq!(game.phase, Phase::Setup);
 
+    let active_player = game.players.active_player.as_ref().unwrap();
+    assert_eq!(active_player.key, String::from("key1"));
+
     let mut command = Command::new(
         PossibleActions::PlaceVillageAndRoad,
         String::from("key1")
@@ -233,7 +236,8 @@ fn game_progression() {
     let attempt = game.process_action(command);
     assert_eq!(attempt, Err("Must select one node and one road during setup."));
 
-    // TODO: Check that it is player 1's turn
+    let active_player = game.players.active_player.as_ref().unwrap();
+    assert_eq!(active_player.key, String::from("key1"));
 
     let mut command = Command::new(
         PossibleActions::PlaceVillageAndRoad,
@@ -243,7 +247,11 @@ fn game_progression() {
     command.target[1] = (Target::Road, Some(0));
     game.process_action(command).unwrap();
 
-    // TODO: Check that it is player 2's turn
+    // TODO: Send "End Turn" command
+    // TODO: Implement "End Turn" command
+
+    let active_player = game.players.active_player.as_ref().unwrap();
+    assert_eq!(active_player.key, String::from("key2"));
 
     let mut command = Command::new(
         PossibleActions::PlaceVillageAndRoad,
@@ -253,7 +261,8 @@ fn game_progression() {
     command.target[1] = (Target::Road, Some(10));
     game.process_action(command).unwrap();
 
-    // TODO: Check that it is player 2's turn again
+    let active_player = game.players.active_player.as_ref().unwrap();
+    assert_eq!(active_player.key, String::from("key2"));
 
     let mut command = Command::new(
         PossibleActions::PlaceVillageAndRoad,
@@ -263,7 +272,8 @@ fn game_progression() {
     command.target[1] = (Target::Road, Some(25));
     game.process_action(command).unwrap();
 
-    // TODO: Check that it is player 1's turn
+    let active_player = game.players.active_player.as_ref().unwrap();
+    assert_eq!(active_player.key, String::from("key1"));
 
     let mut command = Command::new(
         PossibleActions::PlaceVillageAndRoad,
@@ -273,7 +283,9 @@ fn game_progression() {
     command.target[1] = (Target::Road, Some(5));
     game.process_action(command).unwrap();
 
-    // TODO: Check that it is the play phase
-    // TODO: Check that it is still player 1's turn
+    assert_eq!(game.phase, Phase::Setup);
+
+    let active_player = game.players.active_player.as_ref().unwrap();
+    assert_eq!(active_player.key, String::from("key1"));
 
 }
