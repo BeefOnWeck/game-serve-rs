@@ -197,6 +197,11 @@ impl Game for HexagonIsland {
                     )?;
                     Ok(self)
                 },
+                PossibleActions::EndTurn => {
+                    // TODO: Add setup reverse player order logic here
+                    self.next_player()?;
+                    Ok(self)
+                },
                 _ => Err("That is not an allowed action during the Setup Phase.")
             }, 
             Phase::Play => match command.action {
@@ -250,7 +255,11 @@ impl Game for HexagonIsland {
                     }
                     
                     Ok(self)
-                }
+                },
+                PossibleActions::EndTurn => {
+                    self.next_player()?;
+                    Ok(self)
+                },
                 PossibleActions::None => Ok(self),
                 _ => Err("That action is not supported during the Play phase.")
             },

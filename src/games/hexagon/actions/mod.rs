@@ -7,6 +7,7 @@ pub enum PossibleActions {
     PlaceVillageAndRoad,
     RollDice,
     BuildStuff,
+    EndTurn,
     None
 }
 

@@ -247,8 +247,11 @@ fn game_progression() {
     command.target[1] = (Target::Road, Some(0));
     game.process_action(command).unwrap();
 
-    // TODO: Send "End Turn" command
-    // TODO: Implement "End Turn" command
+    let command = Command::new(
+        PossibleActions::EndTurn,
+        String::from("key1")
+    );
+    game.process_action(command).unwrap();
 
     let active_player = game.players.active_player.as_ref().unwrap();
     assert_eq!(active_player.key, String::from("key2"));
@@ -259,6 +262,12 @@ fn game_progression() {
     );
     command.target[0] = (Target::Node, Some(9));
     command.target[1] = (Target::Road, Some(10));
+    game.process_action(command).unwrap();
+
+    let command = Command::new(
+        PossibleActions::EndTurn,
+        String::from("key2")
+    );
     game.process_action(command).unwrap();
 
     let active_player = game.players.active_player.as_ref().unwrap();
