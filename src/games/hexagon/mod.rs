@@ -9,7 +9,15 @@ mod board;
 mod colo;
 mod resources;
 
-use actions::{ PossibleActions, Target, Command, roll_dice, build_road };
+use actions::{ 
+    PossibleActions, 
+    Target, 
+    Command, 
+    roll_dice, 
+    build_road,
+    count_player_nodes,
+    count_player_roads
+};
 use board::{ GameBoard };
 use colo::get_player_color;
 use resources::{ Resource, ResourceList };
@@ -124,7 +132,14 @@ impl Game for HexagonIsland {
     }
     
     fn next_player(&mut self) -> Result<&mut HexagonIsland, &'static str> {
-        match self.players.next_player() {
+        match self.players.next_player(1) {
+            Ok(_) => Ok(self),
+            Err(e) => Err(e)
+        }
+    }
+
+    fn previous_player(&mut self) -> Result<&mut HexagonIsland, &'static str> {
+        match self.players.next_player(-1) {
             Ok(_) => Ok(self),
             Err(e) => Err(e)
         }
@@ -198,8 +213,28 @@ impl Game for HexagonIsland {
                     Ok(self)
                 },
                 PossibleActions::EndTurn => {
-                    // TODO: Add setup reverse player order logic here
-                    self.next_player()?;
+                    let (
+                        all_players_have_exactly_one,
+                        all_players_have_at_least_one,
+                        all_players_have_exactly_two
+                    ) = self.players.list.iter().fold(
+                        (true,true,true),
+                        | acc, cv | {
+                            let num_nodes = count_player_nodes(&cv.key, &self.board.nodes);
+                            let num_roads = count_player_roads(&cv.key, &self.board.roads);
+                            return (
+                                acc.1 && num_nodes == 1 && num_roads == 1,
+                                acc.0 && num_nodes >= 1 && num_roads >= 1,
+                                acc.1 && num_nodes == 2 && num_roads == 2
+                            );
+                        }
+                    );
+
+                    if all_players_have_exactly_one { }
+                    else if all_players_have_at_least_one { self.previous_player()?; }
+                    else if all_players_have_exactly_two { self.next_phase(); }
+                    else { self.next_player()?; }
+
                     Ok(self)
                 },
                 _ => Err("That is not an allowed action during the Setup Phase.")

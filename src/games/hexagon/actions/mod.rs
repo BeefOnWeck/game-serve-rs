@@ -157,5 +157,38 @@ pub fn build_node(
 
 }
 
+pub fn count_player_nodes(player_key: &String, nodes: &Vec<Node>) -> usize {
+    let num_player_nodes: usize = nodes.iter().fold(
+        0,
+        | mut acc, cv | {
+            match cv.player_key.as_ref() {
+                Some(pk) => { if player_key == pk { acc += 1; } },
+                None => ()
+            };
+
+            acc
+        }
+    );
+
+    num_player_nodes
+}
+
+// TODO: Create a trait around having a player key and then make this function generic
+pub fn count_player_roads(player_key: &String, roads: &Vec<Road>) -> usize {
+    let num_player_roads: usize = roads.iter().fold(
+        0,
+        | mut acc, cv | {
+            match cv.player_key.as_ref() {
+                Some(pk) => { if player_key == pk { acc += 1; } },
+                None => ()
+            };
+
+            acc
+        }
+    );
+
+    num_player_roads
+}
+
 #[cfg(test)]
 mod test;

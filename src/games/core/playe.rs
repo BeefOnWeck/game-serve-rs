@@ -52,7 +52,7 @@ impl Players {
         }  
     }
     
-    pub fn next_player(&mut self) -> Result<&mut Players, &'static str> {
+    pub fn next_player(&mut self, advance: i8) -> Result<&mut Players, &'static str> {
         let active_player = match self.active_player.as_ref() {
             Some(ap) => ap,
             None => return Err("There is no active player.")
@@ -60,7 +60,7 @@ impl Players {
         let active_player_index = self.list.iter().position(|p| p == active_player);
         match active_player_index {
             Some(idx) => {
-                let next_player_index = (idx + 1) % self.cardinality;
+                let next_player_index = (idx as i8 + advance) as usize % self.cardinality;
                 self.active_player = Some(Rc::clone(&self.list[next_player_index]));
                 Ok(self)
             },

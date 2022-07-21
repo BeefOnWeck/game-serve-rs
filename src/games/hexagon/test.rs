@@ -281,6 +281,12 @@ fn game_progression() {
     command.target[1] = (Target::Road, Some(25));
     game.process_action(command).unwrap();
 
+    let command = Command::new(
+        PossibleActions::EndTurn,
+        String::from("key2")
+    );
+    game.process_action(command).unwrap();
+
     let active_player = game.players.active_player.as_ref().unwrap();
     assert_eq!(active_player.key, String::from("key1"));
 
@@ -294,7 +300,15 @@ fn game_progression() {
 
     assert_eq!(game.phase, Phase::Setup);
 
+    let command = Command::new(
+        PossibleActions::EndTurn,
+        String::from("key1")
+    );
+    game.process_action(command).unwrap();
+
     let active_player = game.players.active_player.as_ref().unwrap();
     assert_eq!(active_player.key, String::from("key1"));
+
+    assert_eq!(game.phase, Phase::Play);
 
 }

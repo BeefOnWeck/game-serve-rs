@@ -101,7 +101,14 @@ impl Game for Core {
     }
     
     fn next_player(&mut self) -> Result<&mut Core, &'static str> {
-        match self.players.next_player() {
+        match self.players.next_player(1) {
+            Ok(_) => Ok(self),
+            Err(e) => Err(e)
+        }
+    }
+
+    fn previous_player(&mut self) -> Result<&mut Core, &'static str> {
+        match self.players.next_player(-1) {
             Ok(_) => Ok(self),
             Err(e) => Err(e)
         }
