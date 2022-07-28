@@ -341,3 +341,15 @@ fn game_progression() {
 
     assert_eq!(game.round, 2);
 }
+
+#[test]
+fn action_errors() {
+    let mut game = game_setup();
+
+    let command = Command::new(
+        Actions::EndTurn,
+        String::from("key1")
+    );
+    let attempt = game.process_action(command);
+    assert_eq!(attempt, Err("That is not an allowed action right now."));
+}

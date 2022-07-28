@@ -1,6 +1,29 @@
 use super::*;
 use crate::games::hexagon::board::{ GameBoard };
 
+#[test]
+fn allowed_actions() {
+    assert_eq!(
+        next_allowed_actions(&Actions::EndTurn, 2),
+        vec![Actions::RollDice]
+    );
+    assert_eq!(
+        next_allowed_actions(&Actions::RollDice, 2),
+        vec![
+            Actions::Trade,
+            Actions::BuildStuff,
+            Actions::BuyBug,
+            Actions::EndTurn
+        ]
+    );
+    assert_eq!(
+        next_allowed_actions(&Actions::RollDice, 7),
+        vec![
+            Actions::MoveScorpion
+        ]
+    );
+}
+
 // The sum total of rolling two dice can range between 2 and 12.
 // There are 6 * 6 = 36 possible combinations of the two die rolls.
 // The histogram (counts vs. dice total) of the 36 possible 

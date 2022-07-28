@@ -313,7 +313,7 @@ impl GameBoard {
             let neighboring_nodes = self.find_neighboring_nodes(ind);
             for nn in neighboring_nodes {
                 match &self.nodes[nn].player_key {
-                    Some(player) => spoils.push((player.clone(), resource)),
+                    Some(player) => spoils.push( (player.clone(), resource) ),
                     None => ()
                 }
             }

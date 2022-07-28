@@ -237,18 +237,18 @@ impl Game for HexagonIsland {
                     else if all_players_have_exactly_two {
                         let spoils = self.board.hexagons.iter().enumerate().fold(
                             Vec::new(),
-                            |mut acc, (ind, hex)| {
+                            |mut acc, (ind,hex)| {
                                 let neighboring_nodes = self.board.find_neighboring_nodes(ind);
                                 for nn in neighboring_nodes {
                                     match &self.board.nodes[nn].player_key {
-                                        Some(player) => acc.push((player.clone(), hex.resource)),
+                                        Some(player) => acc.push( (player.clone(), hex.resource) ),
                                         None => ()
                                     }
                                 }
                                 acc
                             }
                         );
-                        for (player_key, resource) in spoils {
+                        for (player_key,resource) in spoils {
                             let resources = self.player_resources.get_mut(&player_key).unwrap();
                             if resource != Resource::Desert {
                                 resources.deposit([resource])?;
