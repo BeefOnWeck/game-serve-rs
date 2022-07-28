@@ -35,6 +35,10 @@ impl ResourceList {
         ]
     }
 
+    pub fn count(&self) -> u16 {
+        self.block + self.rock + self.timber + self.fiber + self.cereal
+    }
+
     pub fn deposit<const N: usize>(&mut self, resources: ResourceArray<N>) -> Result<(),&'static str> {
         for resource in resources {
             match resource {

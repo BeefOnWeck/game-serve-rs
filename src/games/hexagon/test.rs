@@ -236,6 +236,12 @@ fn game_setup() -> HexagonIsland {
     let active_player = game.players.active_player.as_ref().unwrap();
     assert_eq!(active_player.key, String::from("key1"));
 
+    let num_player_one_resources = game.player_resources.get(&String::from("key1")).unwrap().count();
+    let num_player_two_resources = game.player_resources.get(&String::from("key2")).unwrap().count();
+
+    assert!(num_player_one_resources >= 3);
+    assert!(num_player_two_resources >= 3);
+
     game
 
 }
@@ -244,9 +250,9 @@ fn game_setup() -> HexagonIsland {
 fn game_progression() {
     let mut game = game_setup();
 
-    for (ind,road) in game.board.roads.iter().enumerate() {
-        println!("{},{:?}",ind,road);
-    }
+    // for (ind, road) in game.board.roads.iter().enumerate() {
+    //     println!("{},{:?}", ind, road);
+    // }
 
     let player_key = String::from("key1");
     let resources = game.player_resources.get_mut(&player_key).unwrap();
