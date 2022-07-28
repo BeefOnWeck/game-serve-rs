@@ -226,20 +226,20 @@ impl Game for HexagonIsland {
                             let num_nodes = count_player_nodes(&cv.key, &self.board.nodes);
                             let num_roads = count_player_roads(&cv.key, &self.board.roads);
                             return (
-                                acc.1 && num_nodes == 1 && num_roads == 1,
-                                acc.0 && num_nodes >= 1 && num_roads >= 1,
-                                acc.1 && num_nodes == 2 && num_roads == 2
+                                acc.0 && num_nodes == 1 && num_roads == 1,
+                                acc.1 && num_nodes >= 1 && num_roads >= 1,
+                                acc.2 && num_nodes == 2 && num_roads == 2
                             );
                         }
                     );
 
                     if all_players_have_exactly_one { }
-                    else if all_players_have_at_least_one { self.previous_player()?; }
                     else if all_players_have_exactly_two {
                         // TODO: Assign resources to players based upon their village
                         self.next_phase();
                         self.next_round();
                     }
+                    else if all_players_have_at_least_one { self.previous_player()?; }
                     else { self.next_player()?; }
 
                     Ok(self)

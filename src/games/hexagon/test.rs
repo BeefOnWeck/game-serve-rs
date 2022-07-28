@@ -231,10 +231,10 @@ fn game_setup() -> HexagonIsland {
     );
     game.process_action(command).unwrap();
 
+    assert_eq!(game.phase, Phase::Play);
+
     let active_player = game.players.active_player.as_ref().unwrap();
     assert_eq!(active_player.key, String::from("key1"));
-
-    assert_eq!(game.phase, Phase::Play);
 
     game
 
