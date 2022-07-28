@@ -26,12 +26,12 @@ impl Phase {
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub enum PossibleActions {
+pub enum Actions {
     None
 }
 
 pub struct CoreCommand {
-    pub action: PossibleActions
+    pub action: Actions
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -44,7 +44,7 @@ pub struct Core {
     phase: Phase,
     round: u16,
     players: Players,
-    possible_actions: PossibleActions,
+    last_action: Actions,
     config: HashMap<String, CoreConfigType>
 }
 
@@ -59,7 +59,7 @@ impl Game for Core {
             phase: Phase::Boot,
             round: 0,
             players: Players::new(),
-            possible_actions: PossibleActions::None,
+            last_action: Actions::None,
             config: HashMap::new()
         }
     }
@@ -119,7 +119,7 @@ impl Game for Core {
             phase: self.phase.clone(),
             round: self.round.clone(),
             players: self.players.clone(),
-            possible_actions: self.possible_actions.clone(),
+            last_action: self.last_action.clone(),
             config: self.config.clone()
         }
     }
@@ -127,7 +127,7 @@ impl Game for Core {
     fn process_action(&mut self, command: Self::Command) -> Result<&mut Core, &'static str> {
         match self.phase {
             Phase::Setup | Phase::Play => match command.action {
-                PossibleActions::None => Ok(self)
+                Actions::None => Ok(self)
             },
             _ => Err("Can only take action during the Setup or Play phases!")
         }

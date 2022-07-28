@@ -75,17 +75,17 @@ impl GameBoard {
         self
     }
 
-    pub fn setup(&mut self, game_board_width: i8) {
+    pub fn setup(&mut self, game_board_width: u8) {
         const CENTROID_SPACING: u8 = 100;
         self.compute_hex_grid_centroids(CENTROID_SPACING, game_board_width);
         self.assign_resources_and_rolls();
         self.compute_nodes_and_roads(CENTROID_SPACING);
     }
 
-    fn compute_hex_grid_centroids(&mut self, centroid_spacing: u8, game_board_width: i8) {
-        let num_off_center_rows: i8 = (game_board_width - 1) / 2;
+    fn compute_hex_grid_centroids(&mut self, centroid_spacing: u8, game_board_width: u8) {
+        let num_off_center_rows: i8 = (game_board_width as i8 - 1) / 2;
         for row in (-1 * num_off_center_rows)..=num_off_center_rows {
-            let num_hex_in_row = game_board_width - row.abs();
+            let num_hex_in_row = game_board_width as i8 - row.abs();
             let vertical_offset: f64 = f64::from(row) * f64::sqrt(3.0/4.0);
             let horizontal_offset: f64 = f64::from(row).abs() / 2.0;
             for hex in 0..num_hex_in_row {

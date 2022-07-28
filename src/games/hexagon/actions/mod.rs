@@ -2,11 +2,14 @@ use rand::{thread_rng, Rng};
 
 use super::board::{ Road, Node, BuildingType };
 
-#[derive(Clone, Debug, PartialEq)]
-pub enum PossibleActions {
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub enum Actions {
     PlaceVillageAndRoad,
     RollDice,
+    MoveScorpion,
     BuildStuff,
+    Trade,
+    BuyBug,
     EndTurn,
     None
 }
@@ -19,18 +22,66 @@ pub enum Target {
 }
 
 pub struct Command {
-    pub action: PossibleActions,
+    pub action: Actions,
     pub player: String,
     pub target: [( Target, Option<usize> ); 5] // TODO: Const Generic
 }
 
 impl Command {
-    pub fn new(action: PossibleActions, player: String) -> Command {
+    pub fn new(action: Actions, player: String) -> Command {
         Command { 
             action, 
             player: player.clone(),
             target: [( Target::None, None ); 5]
         }
+    }
+}
+
+pub fn next_allowed_actions(last_action: &Actions, roll_sum: u8) -> Vec<Actions> {
+    match last_action {
+        Actions::PlaceVillageAndRoad => vec![
+            Actions::RollDice
+        ],
+        Actions::RollDice => {
+            match roll_sum {
+                7 => vec![
+                    Actions::MoveScorpion
+                ],
+                _ =>vec![
+                    Actions::Trade,
+                    Actions::BuildStuff,
+                    Actions::BuyBug,
+                    Actions::EndTurn
+                ]
+            }
+        },
+        Actions::MoveScorpion => vec![
+            Actions::Trade,
+            Actions::BuildStuff,
+            Actions::BuyBug,
+            Actions::EndTurn
+        ],
+        Actions::BuildStuff => vec![
+            Actions::Trade,
+            Actions::BuildStuff,
+            Actions::BuyBug,
+            Actions::EndTurn
+        ],
+        Actions::Trade => vec![
+            Actions::Trade,
+            Actions::BuildStuff,
+            Actions::BuyBug,
+            Actions::EndTurn
+        ],
+        Actions::BuyBug => vec![
+            Actions::MoveScorpion
+        ],
+        Actions::EndTurn => vec![
+            Actions::RollDice
+        ],
+        Actions::None => vec![
+            Actions::None
+        ]
     }
 }
 
@@ -70,8 +121,8 @@ pub fn build_road(
         }
 
         // Is there an adjacent road owned by this player?
-        let no_adjacent_road = roads.iter().fold(
-            true,
+        let no_adjacent_road = !roads.iter().fold(
+            false,
             | acc, cv | {
                 let ind_align = 
                     cv.inds.0 == idx1 ||

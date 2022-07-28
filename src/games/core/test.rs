@@ -131,7 +131,7 @@ fn game_status() {
                 active_player: Some(Rc::clone(&player_list[0])),
                 cardinality: 4,
             },
-            possible_actions: PossibleActions::None,
+            last_action: Actions::None,
             config: HashMap::new()
         }
     )
@@ -141,13 +141,13 @@ fn game_status() {
 fn process_actions() {
     let mut game = Core::new();
     let command = CoreCommand {
-        action: PossibleActions::None
+        action: Actions::None
     };
     let attempt = game.process_action(command);
     assert_eq!(attempt, Err("Can only take action during the Setup or Play phases!"));
     game.next_phase().next_phase();
     let command = CoreCommand {
-        action: PossibleActions::None
+        action: Actions::None
     };
     let attempt = game.process_action(command);
     let mut expected_result = Core { 
@@ -158,7 +158,7 @@ fn process_actions() {
             active_player: None, 
             cardinality: 0
         },
-        possible_actions: PossibleActions::None, 
+        last_action: Actions::None, 
         config: HashMap::new() 
     };
     assert_eq!(
@@ -183,7 +183,7 @@ fn game_configuration() {
             active_player: None, 
             cardinality: 0
         },
-        possible_actions: PossibleActions::None, 
+        last_action: Actions::None, 
         config: config_copy 
     };
     assert_eq!(

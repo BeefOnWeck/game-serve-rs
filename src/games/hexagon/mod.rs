@@ -10,9 +10,10 @@ mod colo;
 mod resources;
 
 use actions::{ 
-    PossibleActions, 
+    Actions, 
     Target, 
-    Command, 
+    Command,
+    next_allowed_actions,
     roll_dice, 
     build_road,
     count_player_nodes,
@@ -42,7 +43,7 @@ struct HexagonIsland {
     phase: Phase,
     round: u16,
     players: Players,
-    possible_actions: PossibleActions,
+    last_action: Actions,
     config: Config,
     roll_result: (u8,u8),
     player_colors: HashMap<String, String>,
@@ -60,7 +61,7 @@ impl Game for HexagonIsland {
             phase: Phase::Boot,
             round: 0,
             players: Players::new(),
-            possible_actions: PossibleActions::None,
+            last_action: Actions::None,
             config: Config {
                 num_players: 2,
                 score_to_win: 10,
@@ -118,7 +119,7 @@ impl Game for HexagonIsland {
 
         if self.players.cardinality == self.config.num_players { 
             self.next_phase();
-            self.board.setup(5);
+            self.board.setup(self.config.game_board_width);
         }
 
         Ok(self)
@@ -133,7 +134,12 @@ impl Game for HexagonIsland {
     
     fn next_player(&mut self) -> Result<&mut HexagonIsland, &'static str> {
         match self.players.next_player(1) {
-            Ok(_) => Ok(self),
+            Ok(_) => {
+                let active_player = self.players.active_player.as_ref().unwrap();
+                let active_player_index = self.players.list.iter().position(|p| p == active_player);
+                if active_player_index == Some(0) { self.next_round(); }
+                Ok(self)
+            },
             Err(e) => Err(e)
         }
     }
@@ -167,11 +173,7 @@ impl Game for HexagonIsland {
         // TODO: Throw error if player tries an action out of turn (need to augment Command)
         match self.phase {
             Phase::Setup => match command.action {
-                PossibleActions::PlaceVillageAndRoad => {
-                    // 1. Check that the command target has one village and one road
-                    // 2. Check to ensure the node and road are adjacent
-                    // 3. Try to build the village first
-                    // 4. Try to build the road second
+                Actions::PlaceVillageAndRoad => {
                     let (num_nodes, node_index, num_roads, road_index) = command.target.iter().fold(
                         (0,0,0,0),
                         | mut acc, cv | {
@@ -210,9 +212,10 @@ impl Game for HexagonIsland {
                         &mut self.board.roads,
                         true
                     )?;
+                    self.last_action = Actions::PlaceVillageAndRoad;
                     Ok(self)
                 },
-                PossibleActions::EndTurn => {
+                Actions::EndTurn => {
                     let (
                         all_players_have_exactly_one,
                         all_players_have_at_least_one,
@@ -232,71 +235,81 @@ impl Game for HexagonIsland {
 
                     if all_players_have_exactly_one { }
                     else if all_players_have_at_least_one { self.previous_player()?; }
-                    else if all_players_have_exactly_two { self.next_phase(); }
+                    else if all_players_have_exactly_two {
+                        // TODO: Assign resources to players based upon their village
+                        self.next_phase();
+                        self.next_round();
+                    }
                     else { self.next_player()?; }
 
                     Ok(self)
                 },
                 _ => Err("That is not an allowed action during the Setup Phase.")
             }, 
-            Phase::Play => match command.action {
-                PossibleActions::RollDice => {
-                    self.roll_result = roll_dice();
-                    let roll_sum = self.roll_result.0 + self.roll_result.1;
-                    match roll_sum {
-                        7 => (), // TODO: Move the scorpion
-                        _ => {
-                            let spoils = self.board.collect_resources(roll_sum);
-                            for (player_key, resource) in spoils {
-                                let resources = self.player_resources.get_mut(&player_key).unwrap();
-                                resources.deposit([resource])?;
+            Phase::Play => {
+                let roll_sum = self.roll_result.0 + self.roll_result.1;
+                let allowed_actions = next_allowed_actions(&self.last_action, roll_sum);
+                let valid_action = allowed_actions.iter().any(|&a| a == command.action);
+                if valid_action == false {
+                    return Err("That is not an allowed action right now.");
+                }
+                match command.action {
+                    Actions::RollDice => {
+                        self.roll_result = roll_dice();
+                        let roll_sum = self.roll_result.0 + self.roll_result.1;
+                        match roll_sum {
+                            7 => (), // TODO: Move the scorpion
+                            _ => {
+                                let spoils = self.board.collect_resources(roll_sum);
+                                for (player_key, resource) in spoils {
+                                    let resources = self.player_resources.get_mut(&player_key).unwrap();
+                                    resources.deposit([resource])?;
+                                }
                             }
                         }
-                    }
-                    // TODO: Handle rolls of 7
-                    Ok(self)
-                },
-                PossibleActions::BuildStuff => {
-                    // 1. Loop over node and road indices (roads first)
-                    // 2. Get cost to build
-                    // 3. Check credit
-                    // 4. If check passes, build
-                    // 5. If build passes, deduct cost
-                    let resources = self.player_resources.get_mut(&command.player).unwrap();
-                    let roads = command.target.iter().filter(|t| t.0 == Target::Road);
-                    for r in roads {
-                        resources.check([Resource::Block, Resource::Timber])?;
-                        build_road(
-                            r.1.unwrap(), 
-                            command.player.clone(), 
-                            &self.board.nodes,
-                            &mut self.board.roads,
-                            false
-                        )?;
-                        resources.deduct([Resource::Block, Resource::Timber])?;
-                    }
+                        // TODO: Handle rolls of 7
+                        self.last_action = Actions::RollDice;
+                        Ok(self)
+                    },
+                    Actions::BuildStuff => {
+                        let resources = self.player_resources.get_mut(&command.player).unwrap();
+                        let roads = command.target.iter().filter(|t| t.0 == Target::Road);
+                        for r in roads {
+                            resources.check([Resource::Block, Resource::Timber])?;
+                            build_road(
+                                r.1.unwrap(), 
+                                command.player.clone(), 
+                                &self.board.nodes,
+                                &mut self.board.roads,
+                                false
+                            )?;
+                            resources.deduct([Resource::Block, Resource::Timber])?;
+                        }
 
-                    let nodes = command.target.iter().filter(|t| t.0 == Target::Node);
-                    for n in nodes {
-                        resources.check([Resource::Block, Resource::Timber, Resource::Fiber, Resource::Cereal])?;
-                        build_node(
-                            n.1.unwrap(), 
-                            command.player.clone(), 
-                            &mut self.board.nodes,
-                            &self.board.roads,
-                            false
-                        )?;
-                        resources.deduct([Resource::Block, Resource::Timber, Resource::Fiber, Resource::Cereal])?;
-                    }
-                    
-                    Ok(self)
-                },
-                PossibleActions::EndTurn => {
-                    self.next_player()?;
-                    Ok(self)
-                },
-                PossibleActions::None => Ok(self),
-                _ => Err("That action is not supported during the Play phase.")
+                        let nodes = command.target.iter().filter(|t| t.0 == Target::Node);
+                        for n in nodes {
+                            resources.check([Resource::Block, Resource::Timber, Resource::Fiber, Resource::Cereal])?;
+                            build_node(
+                                n.1.unwrap(), 
+                                command.player.clone(), 
+                                &mut self.board.nodes,
+                                &self.board.roads,
+                                false
+                            )?;
+                            resources.deduct([Resource::Block, Resource::Timber, Resource::Fiber, Resource::Cereal])?;
+                        }
+                        
+                        self.last_action = Actions::BuildStuff;
+                        Ok(self)
+                    },
+                    Actions::EndTurn => {
+                        self.next_player()?;
+                        self.last_action = Actions::EndTurn;
+                        Ok(self)
+                    },
+                    Actions::None => Ok(self),
+                    _ => Err("That action is not supported during the Play phase.")
+                }
             },
             _ => Err("Can only take action during the Setup or Play phases.")
         }
