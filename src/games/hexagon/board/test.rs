@@ -145,8 +145,8 @@ fn should_collect_rolled_resources() {
     rolled_resources.fiber *= 6;
     rolled_resources.cereal *= 6;
 
-    // Call collect_resources() and use this to decrement rolled_resources
-    let spoils = board.collect_resources(roll_sum);
+    // Call resolve_roll() and use this to decrement rolled_resources
+    let spoils = board.resolve_roll(roll_sum);
     for (_player_key, resource) in spoils {
         match resource {
             Resource::Block => rolled_resources.block -= 1,

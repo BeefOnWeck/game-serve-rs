@@ -96,7 +96,7 @@ pub fn roll_dice() -> (u8,u8) {
 pub fn build_road(
     road_index: usize, 
     player_key: String, 
-    nodes: & Vec<Node>, 
+    nodes: &[Node], 
     roads: &mut Vec<Road>,
     is_setup: bool
 ) -> Result<(), &'static str> {
@@ -130,7 +130,7 @@ pub fn build_road(
                     cv.inds.0 == idx2 ||
                     cv.inds.1 == idx2;
                 let player_align = cv.player_key == some_player_key_clone;
-                return acc || (ind_align && player_align);
+                acc || (ind_align && player_align)
             }
         );
 
@@ -149,7 +149,7 @@ pub fn build_node(
     node_index: usize, 
     player_key: String, 
     nodes: &mut Vec<Node>, 
-    roads: &Vec<Road>,
+    roads: &[Road],
     is_setup: bool
 ) -> Result<(), &'static str> {
 
@@ -182,16 +182,17 @@ pub fn build_node(
     // Is there an adjacent road owned by this player?
     // NOTE: Only check this outside of the setup phase
     if is_setup == false {
+        let some_player_key_clone = Some(player_key.clone());
         let no_adjacent_roads: bool = roads.iter().fold(
             true,
             | acc, cv | {
                 if (
                     cv.inds.0 == node_index ||
                     cv.inds.1 == node_index
-                ) && cv.player_key == Some(player_key.clone()) {
-                    return false;
+                ) && cv.player_key == some_player_key_clone {
+                    false
                 } else {
-                    return acc;
+                    acc
                 }
             }
         );

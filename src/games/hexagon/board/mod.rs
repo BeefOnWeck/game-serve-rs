@@ -219,7 +219,7 @@ impl GameBoard {
                     }
                 ).collect();
                 // Is `value` already in the `unique` vector?
-                if new_idx.len() > 0 {
+                if !new_idx.is_empty() {
                     // Update the indices in `roads`
                     for ni in new_idx {
                         self.roads = self.roads.iter().map(
@@ -300,7 +300,27 @@ impl GameBoard {
         neighboring_hexagon_indices
     }
 
-    pub fn collect_resources(&self, roll_sum: u8) -> Vec<(String,Resource)> {
+    pub fn resolve_setup(&self) -> Vec<(String,Resource)> {
+        let spoils = self.hexagons.iter().enumerate().fold(
+            Vec::new(),
+            |mut acc, (ind,hex)| {
+                if hex.resource != Resource::Desert {
+                    let neighboring_nodes = self.find_neighboring_nodes(ind);
+                    for nn in neighboring_nodes {
+                        match &self.nodes[nn].player_key {
+                            Some(player) => acc.push( (player.clone(), hex.resource) ),
+                            None => ()
+                        }
+                    }
+                }
+                acc
+            }
+        );
+
+        spoils
+    }
+
+    pub fn resolve_roll(&self, roll_sum: u8) -> Vec<(String,Resource)> {
         let mut spoils = Vec::new();
 
         let rolled_hexagons: Vec<(usize,Resource)> = self.hexagons.iter().enumerate().filter(

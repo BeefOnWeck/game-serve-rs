@@ -117,7 +117,7 @@ impl Game for Core {
     fn get_game_status(&self) -> Core {
         Core { 
             phase: self.phase.clone(),
-            round: self.round.clone(),
+            round: self.round,
             players: self.players.clone(),
             last_action: self.last_action.clone(),
             config: self.config.clone()

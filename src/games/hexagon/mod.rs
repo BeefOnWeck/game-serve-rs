@@ -102,20 +102,14 @@ impl Game for HexagonIsland {
     }
 
     fn add_player(&mut self, key: &str, name: &str, socket_id: &str) -> Result<&mut HexagonIsland, &'static str> {
-        let idx = self.players.cardinality;
-        if idx == self.config.num_players {
+
+        if self.players.cardinality == self.config.num_players {
             return Err("Cannot add player; exceeds maximum number of players.");
         }
 
+        self.player_colors.insert(String::from(key), get_player_color(self.players.cardinality));
+        self.player_resources.insert(String::from(key), ResourceList::new());
         self.players.add_player(key, name, socket_id);
-        self.player_colors.insert(
-            String::from(key),
-            get_player_color(idx)
-        );
-        self.player_resources.insert(
-            String::from(key),
-            ResourceList::new()
-        );
 
         if self.players.cardinality == self.config.num_players { 
             self.next_phase();
@@ -154,7 +148,7 @@ impl Game for HexagonIsland {
     fn get_game_status(&self) -> Status {
         Status { 
             phase: self.phase.clone(),
-            round: self.round.clone(),
+            round: self.round,
             players: self.players.clone()
         }
     }
@@ -170,10 +164,15 @@ impl Game for HexagonIsland {
     }
 
     fn process_action(&mut self, command: Self::Command) -> Result<&mut HexagonIsland, &'static str> {
-        // TODO: Throw error if player tries an action out of turn (need to augment Command)
+        let active_player = self.players.active_player.as_ref().unwrap();
+        if command.player != active_player.key {
+            return Err("It is not your turn.");
+        }
+        
         match self.phase {
             Phase::Setup => match command.action {
                 Actions::PlaceVillageAndRoad => {
+                    // TODO: Refactor into a function in actions
                     let (num_nodes, node_index, num_roads, road_index) = command.target.iter().fold(
                         (0,0,0,0),
                         | mut acc, cv | {
@@ -194,10 +193,12 @@ impl Game for HexagonIsland {
                     if num_nodes != 1 || num_roads != 1 {
                         return Err("Must select one node and one road during setup.");
                     }
+
                     let adj_nodes = self.board.roads[road_index].inds;
                     if adj_nodes.0 != node_index && adj_nodes.1 != node_index {
                         return Err("Selected node and road must be next to each other.");
                     }
+
                     build_node(
                         node_index, 
                         command.player.clone(), 
@@ -216,6 +217,7 @@ impl Game for HexagonIsland {
                     Ok(self)
                 },
                 Actions::EndTurn => {
+                    // TODO: Reactor into a function in board
                     let (
                         all_players_have_exactly_one,
                         all_players_have_at_least_one,
@@ -225,29 +227,18 @@ impl Game for HexagonIsland {
                         | acc, cv | {
                             let num_nodes = count_player_nodes(&cv.key, &self.board.nodes);
                             let num_roads = count_player_roads(&cv.key, &self.board.roads);
-                            return (
+                            (
                                 acc.0 && num_nodes == 1 && num_roads == 1,
                                 acc.1 && num_nodes >= 1 && num_roads >= 1,
                                 acc.2 && num_nodes == 2 && num_roads == 2
-                            );
+                            )
                         }
                     );
 
                     if all_players_have_exactly_one { }
                     else if all_players_have_exactly_two {
-                        let spoils = self.board.hexagons.iter().enumerate().fold(
-                            Vec::new(),
-                            |mut acc, (ind,hex)| {
-                                let neighboring_nodes = self.board.find_neighboring_nodes(ind);
-                                for nn in neighboring_nodes {
-                                    match &self.board.nodes[nn].player_key {
-                                        Some(player) => acc.push( (player.clone(), hex.resource) ),
-                                        None => ()
-                                    }
-                                }
-                                acc
-                            }
-                        );
+                        // TODO: Refactor into a function in board
+                        let spoils = self.board.resolve_setup();
                         for (player_key,resource) in spoils {
                             let resources = self.player_resources.get_mut(&player_key).unwrap();
                             if resource != Resource::Desert {
@@ -265,12 +256,14 @@ impl Game for HexagonIsland {
                 _ => Err("That is not an allowed action during the Setup Phase.")
             }, 
             Phase::Play => {
+                // Check if command.action is allowed
                 let roll_sum = self.roll_result.0 + self.roll_result.1;
                 let allowed_actions = next_allowed_actions(&self.last_action, roll_sum);
                 let valid_action = allowed_actions.iter().any(|&a| a == command.action);
-                if valid_action == false {
+                if !valid_action {
                     return Err("That is not an allowed action right now.");
                 }
+
                 match command.action {
                     Actions::RollDice => {
                         self.roll_result = roll_dice();
@@ -278,7 +271,7 @@ impl Game for HexagonIsland {
                         match roll_sum {
                             7 => (), // TODO: Move the scorpion
                             _ => {
-                                let spoils = self.board.collect_resources(roll_sum);
+                                let spoils = self.board.resolve_roll(roll_sum);
                                 for (player_key, resource) in spoils {
                                     let resources = self.player_resources.get_mut(&player_key).unwrap();
                                     resources.deposit([resource])?;
@@ -290,6 +283,7 @@ impl Game for HexagonIsland {
                     },
                     Actions::BuildStuff => {
                         let resources = self.player_resources.get_mut(&command.player).unwrap();
+
                         let roads = command.target.iter().filter(|t| t.0 == Target::Road);
                         for r in roads {
                             resources.check([Resource::Block, Resource::Timber])?;

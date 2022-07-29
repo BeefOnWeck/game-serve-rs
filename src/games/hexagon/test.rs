@@ -90,6 +90,8 @@ fn should_reset() {
 #[test]
 fn can_roll_the_dice() {
     let mut game = HexagonIsland::new();
+    game.add_player("key1", "name1", "socket_id1").unwrap()
+        .add_player("key2", "name2", "socket_id2").unwrap();
     game.phase = Phase::Play;
     game.last_action = Actions::EndTurn;
     assert_eq!(game.roll_result, (0,0));
@@ -168,8 +170,8 @@ fn game_setup() -> HexagonIsland {
         Actions::PlaceVillageAndRoad,
         String::from("key1")
     );
-    command.target[0] = (Target::Node, Some(0));
-    command.target[1] = (Target::Road, Some(0));
+    command.target[0] = (Target::Node, Some(10));
+    command.target[1] = (Target::Road, Some(26));
     game.process_action(command).unwrap();
 
     let command = Command::new(
@@ -185,8 +187,8 @@ fn game_setup() -> HexagonIsland {
         Actions::PlaceVillageAndRoad,
         String::from("key2")
     );
-    command.target[0] = (Target::Node, Some(9));
-    command.target[1] = (Target::Road, Some(10));
+    command.target[0] = (Target::Node, Some(15));
+    command.target[1] = (Target::Road, Some(21));
     game.process_action(command).unwrap();
 
     let command = Command::new(
@@ -202,8 +204,8 @@ fn game_setup() -> HexagonIsland {
         Actions::PlaceVillageAndRoad,
         String::from("key2")
     );
-    command.target[0] = (Target::Node, Some(20));
-    command.target[1] = (Target::Road, Some(25));
+    command.target[0] = (Target::Node, Some(42));
+    command.target[1] = (Target::Road, Some(55));
     game.process_action(command).unwrap();
 
     let command = Command::new(
@@ -219,8 +221,8 @@ fn game_setup() -> HexagonIsland {
         Actions::PlaceVillageAndRoad,
         String::from("key1")
     );
-    command.target[0] = (Target::Node, Some(4));
-    command.target[1] = (Target::Road, Some(5));
+    command.target[0] = (Target::Node, Some(20));
+    command.target[1] = (Target::Road, Some(25));
     game.process_action(command).unwrap();
 
     assert_eq!(game.phase, Phase::Setup);
@@ -291,15 +293,15 @@ fn game_progression() {
         Actions::BuildStuff,
         String::from("key1")
     );
-    command.target[0] = (Target::Road, Some(19));
-    command.target[1] = (Target::Road, Some(20));
+    command.target[0] = (Target::Road, Some(27));
+    command.target[1] = (Target::Road, Some(44));
     game.process_action(command).unwrap();
 
     let mut command = Command::new(
         Actions::BuildStuff,
         String::from("key1")
     );
-    command.target[0] = (Target::Node, Some(17));
+    command.target[0] = (Target::Node, Some(34));
     game.process_action(command).unwrap();
 
     let command = Command::new(
@@ -319,15 +321,15 @@ fn game_progression() {
         Actions::BuildStuff,
         String::from("key2")
     );
-    command.target[0] = (Target::Road, Some(27));
-    command.target[1] = (Target::Road, Some(28));
+    command.target[0] = (Target::Road, Some(38));
+    command.target[1] = (Target::Road, Some(39));
     game.process_action(command).unwrap();
 
     let mut command = Command::new(
         Actions::BuildStuff,
         String::from("key2")
     );
-    command.target[0] = (Target::Node, Some(23));
+    command.target[0] = (Target::Node, Some(30));
     game.process_action(command).unwrap();
 
     let command = Command::new(
