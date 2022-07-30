@@ -124,6 +124,10 @@ impl Game for Core {
         }
     }
 
+    fn find_the_winner(&mut self) -> &mut Self {
+        self
+    }
+
     fn process_action(&mut self, command: Self::Command) -> Result<&mut Core, &'static str> {
         match self.phase {
             Phase::Setup | Phase::Play => match command.action {

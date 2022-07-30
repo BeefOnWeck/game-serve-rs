@@ -13,6 +13,7 @@ pub trait Game {
     fn next_player(&mut self) -> Result<&mut Self, &'static str>;
     fn previous_player(&mut self) -> Result<&mut Self, &'static str>;
     fn get_game_status(&self) -> Self::Status;
+    fn find_the_winner(&mut self) -> &mut Self;
     fn process_action(&mut self, command: Self::Command) -> Result<&mut Self, &'static str>;
     fn configure_game(&mut self, config: Self::Config) -> Result<&mut Self, &'static str>;
 }

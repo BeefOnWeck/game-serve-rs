@@ -209,8 +209,8 @@ pub fn build_node(
 
 }
 
-pub fn count_player_nodes(player_key: &String, nodes: &Vec<Node>) -> usize {
-    let num_player_nodes: usize = nodes.iter().fold(
+pub fn count_player_nodes(player_key: &String, nodes: &Vec<Node>) -> u8 {
+    let num_player_nodes: u8 = nodes.iter().fold(
         0,
         | mut acc, cv | {
             match cv.player_key.as_ref() {

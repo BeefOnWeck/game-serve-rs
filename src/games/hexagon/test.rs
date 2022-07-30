@@ -22,7 +22,8 @@ fn initial_state() {
             roll_result: (0,0), 
             player_colors: HashMap::new(),
             player_resources: HashMap::new(), 
-            board: GameBoard::new()
+            board: GameBoard::new(),
+            the_winner: None
         }
     )
 }
@@ -82,7 +83,8 @@ fn should_reset() {
             roll_result: (0,0),
             player_colors: HashMap::new(),
             player_resources: HashMap::new(), 
-            board: GameBoard::new()
+            board: GameBoard::new(),
+            the_winner: None
         }
     )
 }
@@ -140,7 +142,7 @@ fn game_setup() -> HexagonIsland {
     let mut game = HexagonIsland::new();
     let config = Config {
         num_players: 2,
-        score_to_win: 10,
+        score_to_win: 4,
         game_board_width: 5
     };
     game.configure_game(config).unwrap();
@@ -248,13 +250,7 @@ fn game_setup() -> HexagonIsland {
 
 }
 
-#[test]
-fn game_progression() {
-    let mut game = game_setup();
-
-    // for (ind, road) in game.board.roads.iter().enumerate() {
-    //     println!("{},{:?}", ind, road);
-    // }
+fn play_round_one(mut game: HexagonIsland) -> HexagonIsland {
 
     let player_key = String::from("key1");
     let resources = game.player_resources.get_mut(&player_key).unwrap();
@@ -338,6 +334,14 @@ fn game_progression() {
     );
     game.process_action(command).unwrap();
 
+    game
+}
+
+#[test]
+fn game_progression() {
+    let mut game = game_setup();
+    game = play_round_one(game);
+
     let active_player = game.players.active_player.as_ref().unwrap();
     assert_eq!(active_player.key, String::from("key1"));
 
@@ -354,4 +358,58 @@ fn action_errors() {
     );
     let attempt = game.process_action(command);
     assert_eq!(attempt, Err("That is not an allowed action right now."));
+}
+
+#[test]
+fn should_find_the_winner() {
+    let mut game = game_setup();
+    game = play_round_one(game);
+
+    assert_eq!(game.the_winner, None);
+
+    let player_key = String::from("key1");
+    let resources = game.player_resources.get_mut(&player_key).unwrap();
+    resources.deposit([
+        Resource::Block,
+        Resource::Timber,
+        Resource::Block,
+        Resource::Timber,
+        Resource::Block,
+        Resource::Timber,
+        Resource::Fiber,
+        Resource::Cereal
+    ]).unwrap();
+
+    let command = Command::new(
+        Actions::RollDice,
+        String::from("key1")
+    );
+    game.process_action(command).unwrap();
+    game.roll_result = (1,1); // In case we roll a 7
+
+    let mut command = Command::new(
+        Actions::BuildStuff,
+        String::from("key1")
+    );
+    command.target[0] = (Target::Road, Some(43));
+    command.target[1] = (Target::Road, Some(58));
+    game.process_action(command).unwrap();
+
+    let mut command = Command::new(
+        Actions::BuildStuff,
+        String::from("key1")
+    );
+    command.target[0] = (Target::Node, Some(44));
+    game.process_action(command).unwrap();
+
+    let command = Command::new(
+        Actions::EndTurn,
+        String::from("key1")
+    );
+    game.process_action(command).unwrap();
+
+    assert_eq!(game.the_winner.unwrap(), String::from("key1"));
+    assert_eq!(game.phase, Phase::End);
+
+
 }

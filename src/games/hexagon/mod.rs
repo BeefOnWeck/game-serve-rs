@@ -48,7 +48,8 @@ struct HexagonIsland {
     roll_result: (u8,u8),
     player_colors: HashMap<String, String>,
     player_resources: HashMap<String, ResourceList>,
-    board: GameBoard
+    board: GameBoard,
+    the_winner: Option<String>
 }
 
 impl Game for HexagonIsland {
@@ -70,7 +71,8 @@ impl Game for HexagonIsland {
             roll_result: (0,0),
             player_colors: HashMap::new(),
             player_resources: HashMap::new(), 
-            board: GameBoard::new()
+            board: GameBoard::new(),
+            the_winner: None
         }
     }
 
@@ -97,6 +99,7 @@ impl Game for HexagonIsland {
         self.player_resources.clear();
         self.player_colors.clear();
         self.roll_result = (0,0);
+        self.the_winner = None;
 
         self
     }
@@ -161,6 +164,17 @@ impl Game for HexagonIsland {
             },
             _ => Err("Cannot configure game outside of boot phase!")
         }
+    }
+
+    fn find_the_winner(&mut self) -> &mut HexagonIsland {
+        for player in self.players.list.iter() {
+            let building_score = count_player_nodes(&player.key, &self.board.nodes);
+            let score = building_score;
+            if score >= self.config.score_to_win {
+                self.the_winner = Some(player.key.clone());
+            }
+        }
+        self
     }
 
     fn process_action(&mut self, command: Self::Command) -> Result<&mut HexagonIsland, &'static str> {
@@ -314,8 +328,17 @@ impl Game for HexagonIsland {
                         Ok(self)
                     },
                     Actions::EndTurn => {
-                        self.next_player()?;
-                        self.last_action = Actions::EndTurn;
+                        self.find_the_winner();
+                        match &self.the_winner {
+                            Some(_) => {
+                                self.next_phase();
+                            },
+                            None => {
+                                self.next_player()?;
+                                self.last_action = Actions::EndTurn;
+                            }
+                        }
+                        
                         Ok(self)
                     },
                     Actions::None => Ok(self),
