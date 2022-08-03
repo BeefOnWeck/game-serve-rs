@@ -411,5 +411,32 @@ fn should_find_the_winner() {
     assert_eq!(game.the_winner.unwrap(), String::from("key1"));
     assert_eq!(game.phase, Phase::End);
 
+}
 
+#[test]
+fn move_scorpion_when_seven_is_rolled() {
+    let mut game = game_setup();
+
+    let desert_index = game.board.hexagons.iter()
+        .position(|hex| { hex.resource == Resource::Desert })
+        .unwrap();
+
+    assert_eq!(game.board.scorpion_index.unwrap(), desert_index);
+
+    let command = Command::new(
+        Actions::RollDice,
+        String::from("key1")
+    );
+    game.process_action(command).unwrap();
+    game.roll_result = (3,4); // Intentionally roll a seven
+
+    let mut command = Command::new(
+        Actions::MoveScorpion,
+        String::from("key1")
+    );
+    command.target[0] = (Target::Hex, Some(0));
+    game.process_action(command).unwrap();
+
+    assert_eq!(game.board.scorpion_index.unwrap(), 0);
+    
 }

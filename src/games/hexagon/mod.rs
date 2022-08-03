@@ -132,7 +132,8 @@ impl Game for HexagonIsland {
     fn next_player(&mut self) -> Result<&mut HexagonIsland, &'static str> {
         match self.players.next_player(1) {
             Ok(_) => {
-                let active_player = self.players.active_player.as_ref().unwrap();
+                let active_player = self.players.active_player.as_ref()
+                    .ok_or_else(|| "Can't get active player")?;
                 let active_player_index = self.players.list.iter().position(|p| p == active_player);
                 if active_player_index == Some(0) { self.next_round(); }
                 Ok(self)
@@ -178,7 +179,9 @@ impl Game for HexagonIsland {
     }
 
     fn process_action(&mut self, command: Self::Command) -> Result<&mut HexagonIsland, &'static str> {
-        let active_player = self.players.active_player.as_ref().unwrap();
+        
+        let active_player = self.players.active_player.as_ref()
+            .ok_or_else(|| "Can't get active player")?;
         if command.player != active_player.key {
             return Err("It is not your turn.");
         }
@@ -199,7 +202,7 @@ impl Game for HexagonIsland {
                                     acc.2 += 1;
                                     acc.3 = cv.1.unwrap();
                                 },
-                                Target::None => ()
+                                _ => ()
                             }
                             acc
                         }
@@ -231,7 +234,7 @@ impl Game for HexagonIsland {
                     Ok(self)
                 },
                 Actions::EndTurn => {
-                    // TODO: Reactor into a function in board
+                    // TODO: Refactor into a function in board
                     let (
                         all_players_have_exactly_one,
                         all_players_have_at_least_one,
@@ -254,7 +257,8 @@ impl Game for HexagonIsland {
                         // TODO: Refactor into a function in board
                         let spoils = self.board.resolve_setup();
                         for (player_key,resource) in spoils {
-                            let resources = self.player_resources.get_mut(&player_key).unwrap();
+                            let resources = self.player_resources.get_mut(&player_key)
+                                .ok_or_else(|| "Can't get player resources.")?;
                             if resource != Resource::Desert {
                                 resources.deposit([resource])?;
                             }
@@ -287,7 +291,8 @@ impl Game for HexagonIsland {
                             _ => {
                                 let spoils = self.board.resolve_roll(roll_sum);
                                 for (player_key, resource) in spoils {
-                                    let resources = self.player_resources.get_mut(&player_key).unwrap();
+                                    let resources = self.player_resources.get_mut(&player_key)
+                                        .ok_or_else(|| "Can't get player resources.")?;
                                     resources.deposit([resource])?;
                                 }
                             }
@@ -296,7 +301,8 @@ impl Game for HexagonIsland {
                         Ok(self)
                     },
                     Actions::BuildStuff => {
-                        let resources = self.player_resources.get_mut(&command.player).unwrap();
+                        let resources = self.player_resources.get_mut(&command.player)
+                            .ok_or_else(|| "Can't get player resources.")?;
 
                         let roads = command.target.iter().filter(|t| t.0 == Target::Road);
                         for r in roads {
@@ -325,6 +331,33 @@ impl Game for HexagonIsland {
                         }
                         
                         self.last_action = Actions::BuildStuff;
+                        Ok(self)
+                    },
+                    Actions::MoveScorpion => {
+                        let (num_hex, hex_index) = command.target.iter().fold(
+                            (0,0),
+                            | mut acc, cv | {
+                                match cv.0 {
+                                    Target::Hex => {
+                                        acc.0 += 1;
+                                        acc.1 = cv.1.unwrap();
+                                    },
+                                    _ => ()
+                                }
+                                acc
+                            }
+                        );
+                        
+                        if num_hex != 1 {
+                            return Err("Must select one hexagon when moving the scorpion.");
+                        }
+
+                        if hex_index >= self.board.hexagons.len() {
+                            return Err("Cannot move scorpion; invalid hexagon index.");
+                        }
+
+                        self.board.scorpion_index = Some(hex_index);
+
                         Ok(self)
                     },
                     Actions::EndTurn => {

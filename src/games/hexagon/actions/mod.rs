@@ -18,6 +18,7 @@ pub enum Actions {
 pub enum Target {
     Road,
     Node,
+    Hex,
     None
 }
 

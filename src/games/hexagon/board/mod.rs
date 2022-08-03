@@ -49,7 +49,7 @@ pub struct GameBoard {
     pub hexagons: Vec<Hexagon>,
     pub roads: Vec<Road>,
     pub bugs: HashMap<String, u8>,
-    pub scorpion_index: Option<u32>
+    pub scorpion_index: Option<usize>
 }
 
 impl GameBoard {
@@ -80,6 +80,9 @@ impl GameBoard {
         self.compute_hex_grid_centroids(CENTROID_SPACING, game_board_width);
         self.assign_resources_and_rolls();
         self.compute_nodes_and_roads(CENTROID_SPACING);
+        self.scorpion_index = self.hexagons.iter()
+            .position(|hex| { hex.resource == Resource::Desert });
+
     }
 
     fn compute_hex_grid_centroids(&mut self, centroid_spacing: u8, game_board_width: u8) {
