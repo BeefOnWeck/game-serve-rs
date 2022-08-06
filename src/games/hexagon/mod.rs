@@ -193,16 +193,18 @@ impl Game for HexagonIsland {
                     let (num_nodes, node_index, num_roads, road_index) = command.target.iter().fold(
                         (0,0,0,0),
                         | mut acc, cv | {
-                            match cv.0 {
-                                Target::Node => {
-                                    acc.0 += 1;
-                                    acc.1 = cv.1.unwrap();
-                                },
-                                Target::Road => {
-                                    acc.2 += 1;
-                                    acc.3 = cv.1.unwrap();
-                                },
-                                _ => ()
+                            if let Some(cmd) = cv {
+                                match cmd.0 {
+                                    Target::Node => {
+                                        acc.0 += 1;
+                                        acc.1 = cmd.1;
+                                    },
+                                    Target::Road => {
+                                        acc.2 += 1;
+                                        acc.3 = cmd.1;
+                                    },
+                                    _ => ()
+                                }
                             }
                             acc
                         }
@@ -304,11 +306,14 @@ impl Game for HexagonIsland {
                         let resources = self.player_resources.get_mut(&command.player)
                             .ok_or_else(|| "Can't get player resources.")?;
 
-                        let roads = command.target.iter().filter(|t| t.0 == Target::Road);
+                        let roads = command.target.iter()
+                            .filter_map(|&t| t)
+                            .filter(|t| t.0 == Target::Road)
+                            .map(|t| t.1);
                         for r in roads {
                             resources.check([Resource::Block, Resource::Timber])?;
                             build_road(
-                                r.1.unwrap(), 
+                                r, 
                                 command.player.clone(), 
                                 &self.board.nodes,
                                 &mut self.board.roads,
@@ -317,11 +322,14 @@ impl Game for HexagonIsland {
                             resources.deduct([Resource::Block, Resource::Timber])?;
                         }
 
-                        let nodes = command.target.iter().filter(|t| t.0 == Target::Node);
+                        let nodes = command.target.iter()
+                            .filter_map(|&t| t)
+                            .filter(|t| t.0 == Target::Node)
+                            .map(|t| t.1);
                         for n in nodes {
                             resources.check([Resource::Block, Resource::Timber, Resource::Fiber, Resource::Cereal])?;
                             build_node(
-                                n.1.unwrap(), 
+                                n, 
                                 command.player.clone(), 
                                 &mut self.board.nodes,
                                 &self.board.roads,
@@ -337,12 +345,14 @@ impl Game for HexagonIsland {
                         let (num_hex, hex_index) = command.target.iter().fold(
                             (0,0),
                             | mut acc, cv | {
-                                match cv.0 {
-                                    Target::Hex => {
-                                        acc.0 += 1;
-                                        acc.1 = cv.1.unwrap();
-                                    },
-                                    _ => ()
+                                if let Some(cmd) = cv {
+                                    match cmd.0 {
+                                        Target::Hex => {
+                                            acc.0 += 1;
+                                            acc.1 = cmd.1;
+                                        },
+                                        _ => ()
+                                    }
                                 }
                                 acc
                             }

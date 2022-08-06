@@ -19,13 +19,13 @@ pub enum Target {
     Road,
     Node,
     Hex,
-    None
+    Resource
 }
 
 pub struct Command {
     pub action: Actions,
     pub player: String,
-    pub target: [( Target, Option<usize> ); 5] // TODO: Const Generic
+    pub target: [Option<(Target,usize)>; 5]
 }
 
 impl Command {
@@ -33,7 +33,7 @@ impl Command {
         Command { 
             action, 
             player: player.clone(),
-            target: [( Target::None, None ); 5]
+            target: [None; 5]
         }
     }
 }

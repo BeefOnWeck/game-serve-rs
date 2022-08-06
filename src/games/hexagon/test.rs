@@ -101,7 +101,7 @@ fn can_roll_the_dice() {
     let command = Command {
         action: Actions::RollDice,
         player: String::from("key1"),
-        target: [(Target::None, None); 5]
+        target: [None; 5]
     };
     game.process_action(command).unwrap();
     assert!(game.roll_result != (0,0));
@@ -161,7 +161,7 @@ fn game_setup() -> HexagonIsland {
         Actions::PlaceVillageAndRoad,
         String::from("key1")
     );
-    command.target[0] = (Target::Node, Some(0));
+    command.target[0] = Some( (Target::Node, 0) );
     let attempt = game.process_action(command);
     assert_eq!(attempt, Err("Must select one node and one road during setup."));
 
@@ -172,8 +172,8 @@ fn game_setup() -> HexagonIsland {
         Actions::PlaceVillageAndRoad,
         String::from("key1")
     );
-    command.target[0] = (Target::Node, Some(10));
-    command.target[1] = (Target::Road, Some(26));
+    command.target[0] = Some( (Target::Node, 10) );
+    command.target[1] = Some( (Target::Road, 26) );
     game.process_action(command).unwrap();
 
     let command = Command::new(
@@ -189,8 +189,8 @@ fn game_setup() -> HexagonIsland {
         Actions::PlaceVillageAndRoad,
         String::from("key2")
     );
-    command.target[0] = (Target::Node, Some(15));
-    command.target[1] = (Target::Road, Some(21));
+    command.target[0] = Some( (Target::Node, 15) );
+    command.target[1] = Some( (Target::Road, 21) );
     game.process_action(command).unwrap();
 
     let command = Command::new(
@@ -206,8 +206,8 @@ fn game_setup() -> HexagonIsland {
         Actions::PlaceVillageAndRoad,
         String::from("key2")
     );
-    command.target[0] = (Target::Node, Some(42));
-    command.target[1] = (Target::Road, Some(55));
+    command.target[0] = Some( (Target::Node, 42) );
+    command.target[1] = Some( (Target::Road, 55) );
     game.process_action(command).unwrap();
 
     let command = Command::new(
@@ -223,8 +223,8 @@ fn game_setup() -> HexagonIsland {
         Actions::PlaceVillageAndRoad,
         String::from("key1")
     );
-    command.target[0] = (Target::Node, Some(20));
-    command.target[1] = (Target::Road, Some(25));
+    command.target[0] = Some( (Target::Node, 20) );
+    command.target[1] = Some( (Target::Road, 25) );
     game.process_action(command).unwrap();
 
     assert_eq!(game.phase, Phase::Setup);
@@ -289,15 +289,15 @@ fn play_round_one(mut game: HexagonIsland) -> HexagonIsland {
         Actions::BuildStuff,
         String::from("key1")
     );
-    command.target[0] = (Target::Road, Some(27));
-    command.target[1] = (Target::Road, Some(44));
+    command.target[0] = Some( (Target::Road, 27) );
+    command.target[1] = Some( (Target::Road, 44) );
     game.process_action(command).unwrap();
 
     let mut command = Command::new(
         Actions::BuildStuff,
         String::from("key1")
     );
-    command.target[0] = (Target::Node, Some(34));
+    command.target[0] = Some( (Target::Node, 34) );
     game.process_action(command).unwrap();
 
     let command = Command::new(
@@ -317,15 +317,15 @@ fn play_round_one(mut game: HexagonIsland) -> HexagonIsland {
         Actions::BuildStuff,
         String::from("key2")
     );
-    command.target[0] = (Target::Road, Some(38));
-    command.target[1] = (Target::Road, Some(39));
+    command.target[0] = Some( (Target::Road, 38) );
+    command.target[1] = Some( (Target::Road, 39) );
     game.process_action(command).unwrap();
 
     let mut command = Command::new(
         Actions::BuildStuff,
         String::from("key2")
     );
-    command.target[0] = (Target::Node, Some(30));
+    command.target[0] = Some( (Target::Node, 30) );
     game.process_action(command).unwrap();
 
     let command = Command::new(
@@ -391,15 +391,15 @@ fn should_find_the_winner() {
         Actions::BuildStuff,
         String::from("key1")
     );
-    command.target[0] = (Target::Road, Some(43));
-    command.target[1] = (Target::Road, Some(58));
+    command.target[0] = Some( (Target::Road, 43) );
+    command.target[1] = Some( (Target::Road, 58) );
     game.process_action(command).unwrap();
 
     let mut command = Command::new(
         Actions::BuildStuff,
         String::from("key1")
     );
-    command.target[0] = (Target::Node, Some(44));
+    command.target[0] = Some( (Target::Node, 44) );
     game.process_action(command).unwrap();
 
     let command = Command::new(
@@ -434,7 +434,7 @@ fn move_scorpion_when_seven_is_rolled() {
         Actions::MoveScorpion,
         String::from("key1")
     );
-    command.target[0] = (Target::Hex, Some(0));
+    command.target[0] = Some( (Target::Hex, 0) );
     game.process_action(command).unwrap();
 
     assert_eq!(game.board.scorpion_index.unwrap(), 0);
