@@ -287,7 +287,7 @@ impl Game for HexagonIsland {
                         self.roll_result = roll_dice();
                         let roll_sum = self.roll_result.0 + self.roll_result.1;
                         match roll_sum {
-                            7 => (), // TODO: Move the scorpion
+                            7 => (), // Move the scorpion
                             _ => {
                                 let spoils = self.board.resolve_roll(roll_sum);
                                 for (player_key, resource) in spoils {

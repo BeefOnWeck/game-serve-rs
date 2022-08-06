@@ -161,3 +161,70 @@ fn should_collect_rolled_resources() {
     assert_eq!(rolled_resources, ResourceList::new());
 
 }
+
+#[test]
+fn scorpion_should_block_resources() {
+    let mut board = GameBoard::new();
+    board.setup(5);
+
+    // Build a village on each node
+    let player_key = String::from("key_1");
+    for ind in 0..board.nodes.len() {
+        board.nodes[ind].player_key = Some(player_key.clone());
+        board.nodes[ind].building_type = BuildingType::Village;
+    }
+
+    for ind in 0..board.hexagons.len() {
+
+        // Move the scorpion
+        board.scorpion_index = Some(ind);
+
+        // Set the die so that it equals the number of the hexagon with the scorpion
+        let roll_sum = board.hexagons[ind].number;
+        match roll_sum {
+            2..=12 => {
+                // Find out what resources were rolled
+                let mut rolled_resources = board.hexagons.iter().enumerate().fold(
+                    ResourceList::new(),
+                    | mut acc, cv | {
+                        let (i,val) = cv;
+                        if val.number == roll_sum && Some(i) != board.scorpion_index {
+                            match val.resource {
+                                Resource::Block => acc.block += 1,
+                                Resource::Rock => acc.rock += 1,
+                                Resource::Timber => acc.timber += 1,
+                                Resource::Fiber => acc.fiber += 1,
+                                Resource::Cereal => acc.cereal += 1,
+                                Resource::Desert => ()
+                            }
+                        }
+                        acc
+                    }
+                );
+
+                // Each hexagon that matches the roll should contribute six resources
+                rolled_resources.block *= 6;
+                rolled_resources.rock *= 6;
+                rolled_resources.timber *= 6;
+                rolled_resources.fiber *= 6;
+                rolled_resources.cereal *= 6;
+
+                // Call resolve_roll() and use this to decrement rolled_resources
+                let spoils = board.resolve_roll(roll_sum);
+                for (_player_key, resource) in spoils {
+                    match resource {
+                        Resource::Block => rolled_resources.block -= 1,
+                        Resource::Rock => rolled_resources.rock -= 1,
+                        Resource::Timber => rolled_resources.timber -= 1,
+                        Resource::Fiber => rolled_resources.fiber -= 1,
+                        Resource::Cereal => rolled_resources.cereal -= 1,
+                        Resource::Desert => ()
+                    }
+                }
+
+                assert_eq!(rolled_resources, ResourceList::new());
+            },
+            _ => ()
+        }
+    }    
+}

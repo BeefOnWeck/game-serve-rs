@@ -327,7 +327,7 @@ impl GameBoard {
         let mut spoils = Vec::new();
 
         let rolled_hexagons: Vec<(usize,Resource)> = self.hexagons.iter().enumerate().filter(
-            | (_ind, hex) | { hex.number == roll_sum }
+            | (ind, hex) | { hex.number == roll_sum && Some(*ind) != self.scorpion_index }
         ).map(
             | (ind, hex) | { (ind, hex.resource) }
         ).collect();
