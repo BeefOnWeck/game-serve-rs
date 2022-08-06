@@ -36,6 +36,21 @@ impl Command {
             target: [None; 5]
         }
     }
+
+    pub fn check(&self, target: Target) -> (usize,usize) {
+        self.target.iter().fold(
+            (0,0),
+            | mut acc, cv | {
+                if let Some(cmd) = cv {
+                    if cmd.0 == target {
+                        acc.0 += 1;
+                        acc.1 = cmd.1;
+                    }
+                }
+                acc
+            }
+        )
+    }
 }
 
 pub fn next_allowed_actions(last_action: &Actions, roll_sum: u8) -> Vec<Actions> {

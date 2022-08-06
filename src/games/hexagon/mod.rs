@@ -189,26 +189,8 @@ impl Game for HexagonIsland {
         match self.phase {
             Phase::Setup => match command.action {
                 Actions::PlaceVillageAndRoad => {
-                    // TODO: Refactor into a function in actions
-                    let (num_nodes, node_index, num_roads, road_index) = command.target.iter().fold(
-                        (0,0,0,0),
-                        | mut acc, cv | {
-                            if let Some(cmd) = cv {
-                                match cmd.0 {
-                                    Target::Node => {
-                                        acc.0 += 1;
-                                        acc.1 = cmd.1;
-                                    },
-                                    Target::Road => {
-                                        acc.2 += 1;
-                                        acc.3 = cmd.1;
-                                    },
-                                    _ => ()
-                                }
-                            }
-                            acc
-                        }
-                    );
+                    let (num_nodes, node_index) = command.check(Target::Node);
+                    let (num_roads, road_index) = command.check(Target::Road);
                     if num_nodes != 1 || num_roads != 1 {
                         return Err("Must select one node and one road during setup.");
                     }
@@ -342,21 +324,7 @@ impl Game for HexagonIsland {
                         Ok(self)
                     },
                     Actions::MoveScorpion => {
-                        let (num_hex, hex_index) = command.target.iter().fold(
-                            (0,0),
-                            | mut acc, cv | {
-                                if let Some(cmd) = cv {
-                                    match cmd.0 {
-                                        Target::Hex => {
-                                            acc.0 += 1;
-                                            acc.1 = cmd.1;
-                                        },
-                                        _ => ()
-                                    }
-                                }
-                                acc
-                            }
-                        );
+                        let (num_hex, hex_index) = command.check(Target::Hex);
                         
                         if num_hex != 1 {
                             return Err("Must select one hexagon when moving the scorpion.");
