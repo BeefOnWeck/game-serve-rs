@@ -37,19 +37,26 @@ impl Command {
         }
     }
 
-    pub fn check(&self, target: Target) -> (usize,usize) {
+    pub fn get_first(&self, cmd_tgt: Target) -> (usize,usize) {
         self.target.iter().fold(
             (0,0),
             | mut acc, cv | {
                 if let Some(cmd) = cv {
-                    if cmd.0 == target {
+                    if cmd.0 == cmd_tgt {
                         acc.0 += 1;
-                        acc.1 = cmd.1;
+                        if acc.0 == 1 { acc.1 = cmd.1 }
                     }
                 }
                 acc
             }
         )
+    }
+
+    pub fn get_all(&self, cmd_tgt: Target) -> Vec<usize> {
+        self.target.iter()
+            .filter(|t| t.is_some() && t.unwrap().0 == cmd_tgt)
+            .map(|t| t.unwrap().1)
+            .collect()
     }
 }
 

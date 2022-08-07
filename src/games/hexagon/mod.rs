@@ -189,8 +189,8 @@ impl Game for HexagonIsland {
         match self.phase {
             Phase::Setup => match command.action {
                 Actions::PlaceVillageAndRoad => {
-                    let (num_nodes, node_index) = command.check(Target::Node);
-                    let (num_roads, road_index) = command.check(Target::Road);
+                    let (num_nodes, node_index) = command.get_first(Target::Node);
+                    let (num_roads, road_index) = command.get_first(Target::Road);
                     if num_nodes != 1 || num_roads != 1 {
                         return Err("Must select one node and one road during setup.");
                     }
@@ -201,20 +201,22 @@ impl Game for HexagonIsland {
                     }
 
                     build_node(
-                        node_index, 
-                        command.player.clone(), 
+                        node_index,
+                        command.player.clone(),
                         &mut self.board.nodes,
                         &self.board.roads,
                         true
                     )?;
                     build_road(
-                        road_index, 
+                        road_index,
                         command.player.clone(),
                         &self.board.nodes,
                         &mut self.board.roads,
                         true
                     )?;
+
                     self.last_action = Actions::PlaceVillageAndRoad;
+                    
                     Ok(self)
                 },
                 Actions::EndTurn => {
@@ -288,10 +290,7 @@ impl Game for HexagonIsland {
                         let resources = self.player_resources.get_mut(&command.player)
                             .ok_or_else(|| "Can't get player resources.")?;
 
-                        let roads = command.target.iter()
-                            .filter_map(|&t| t)
-                            .filter(|t| t.0 == Target::Road)
-                            .map(|t| t.1);
+                        let roads = command.get_all(Target::Road);
                         for r in roads {
                             resources.check([Resource::Block, Resource::Timber])?;
                             build_road(
@@ -304,10 +303,7 @@ impl Game for HexagonIsland {
                             resources.deduct([Resource::Block, Resource::Timber])?;
                         }
 
-                        let nodes = command.target.iter()
-                            .filter_map(|&t| t)
-                            .filter(|t| t.0 == Target::Node)
-                            .map(|t| t.1);
+                        let nodes = command.get_all(Target::Node);
                         for n in nodes {
                             resources.check([Resource::Block, Resource::Timber, Resource::Fiber, Resource::Cereal])?;
                             build_node(
@@ -324,7 +320,7 @@ impl Game for HexagonIsland {
                         Ok(self)
                     },
                     Actions::MoveScorpion => {
-                        let (num_hex, hex_index) = command.check(Target::Hex);
+                        let (num_hex, hex_index) = command.get_first(Target::Hex);
                         
                         if num_hex != 1 {
                             return Err("Must select one hexagon when moving the scorpion.");
