@@ -132,8 +132,9 @@ impl Game for HexagonIsland {
     fn next_player(&mut self) -> Result<&mut HexagonIsland, &'static str> {
         match self.players.next_player(1) {
             Ok(_) => {
-                let active_player = self.players.active_player.as_ref()
-                    .ok_or_else(|| "Can't get active player")?;
+                let active_player = self.players.active_player
+                    .as_ref()
+                    .ok_or("Can't get active player")?;
                 let active_player_index = self.players.list.iter().position(|p| p == active_player);
                 if active_player_index == Some(0) { self.next_round(); }
                 Ok(self)
@@ -180,11 +181,10 @@ impl Game for HexagonIsland {
 
     fn process_action(&mut self, command: Self::Command) -> Result<&mut HexagonIsland, &'static str> {
         
-        let active_player = self.players.active_player.as_ref()
-            .ok_or_else(|| "Can't get active player")?;
-        if command.player != active_player.key {
-            return Err("It is not your turn.");
-        }
+        let active_player = self.players.active_player
+            .as_ref()
+            .ok_or("Can't get active player")?;
+        if command.player != active_player.key { return Err("It is not your turn."); }
         
         match self.phase {
             Phase::Setup => match command.action {
@@ -243,11 +243,10 @@ impl Game for HexagonIsland {
                         // TODO: Refactor into a function in board
                         let spoils = self.board.resolve_setup();
                         for (player_key,resource) in spoils {
-                            let resources = self.player_resources.get_mut(&player_key)
-                                .ok_or_else(|| "Can't get player resources.")?;
-                            if resource != Resource::Desert {
-                                resources.deposit([resource])?;
-                            }
+                            let resources = self.player_resources
+                                .get_mut(&player_key)
+                                .ok_or("Can't get player resources.")?;
+                            if resource != Resource::Desert { resources.deposit([resource])?; }
                         }
                         self.next_phase();
                         self.next_round();
@@ -277,24 +276,26 @@ impl Game for HexagonIsland {
                             _ => {
                                 let spoils = self.board.resolve_roll(roll_sum);
                                 for (player_key, resource) in spoils {
-                                    let resources = self.player_resources.get_mut(&player_key)
-                                        .ok_or_else(|| "Can't get player resources.")?;
+                                    let resources = self.player_resources
+                                        .get_mut(&player_key)
+                                        .ok_or("Can't get player resources.")?;
                                     resources.deposit([resource])?;
                                 }
                             }
                         }
-                        self.last_action = Actions::RollDice;
+                        self.last_action = command.action;
                         Ok(self)
                     },
                     Actions::BuildStuff => {
-                        let resources = self.player_resources.get_mut(&command.player)
-                            .ok_or_else(|| "Can't get player resources.")?;
+                        let resources = self.player_resources
+                            .get_mut(&command.player)
+                            .ok_or("Can't get player resources.")?;
 
                         let roads = command.get_all(Target::Road);
-                        for r in roads {
+                        for road in roads {
                             resources.check([Resource::Block, Resource::Timber])?;
                             build_road(
-                                r, 
+                                road, 
                                 command.player.clone(), 
                                 &self.board.nodes,
                                 &mut self.board.roads,
@@ -304,11 +305,11 @@ impl Game for HexagonIsland {
                         }
 
                         let nodes = command.get_all(Target::Node);
-                        for n in nodes {
+                        for node in nodes {
                             resources.check([Resource::Block, Resource::Timber, Resource::Fiber, Resource::Cereal])?;
                             build_node(
-                                n, 
-                                command.player.clone(), 
+                                node,
+                                command.player.clone(),
                                 &mut self.board.nodes,
                                 &self.board.roads,
                                 false
@@ -316,7 +317,7 @@ impl Game for HexagonIsland {
                             resources.deduct([Resource::Block, Resource::Timber, Resource::Fiber, Resource::Cereal])?;
                         }
                         
-                        self.last_action = Actions::BuildStuff;
+                        self.last_action = command.action;
                         Ok(self)
                     },
                     Actions::MoveScorpion => {
@@ -332,20 +333,17 @@ impl Game for HexagonIsland {
 
                         self.board.scorpion_index = Some(hex_index);
 
+                        self.last_action = command.action;
                         Ok(self)
                     },
                     Actions::EndTurn => {
                         self.find_the_winner();
                         match &self.the_winner {
-                            Some(_) => {
-                                self.next_phase();
-                            },
-                            None => {
-                                self.next_player()?;
-                                self.last_action = Actions::EndTurn;
-                            }
+                            Some(_) => { self.next_phase(); }
+                            None => { self.next_player()?; }
                         }
                         
+                        self.last_action = command.action;
                         Ok(self)
                     },
                     Actions::None => Ok(self),

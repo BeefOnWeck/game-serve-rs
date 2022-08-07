@@ -80,7 +80,8 @@ impl GameBoard {
         self.compute_hex_grid_centroids(CENTROID_SPACING, game_board_width);
         self.assign_resources_and_rolls();
         self.compute_nodes_and_roads(CENTROID_SPACING);
-        self.scorpion_index = self.hexagons.iter()
+        self.scorpion_index = self.hexagons
+            .iter()
             .position(|hex| { hex.resource == Resource::Desert });
 
     }
@@ -172,11 +173,11 @@ impl GameBoard {
         numbers.push(1); // for the Desert
         numbers.shuffle(&mut rng);
 
-        // Make sure the desert and -1 are at the same index
+        // Make sure the desert and 1 are at the same index
         let desert_index = resources.iter().position(|p| *p == Resource::Desert).unwrap();
-        let minus_one_index = numbers.iter().position(|p| *p == 1).unwrap();
-        if desert_index != minus_one_index {
-            numbers.swap(desert_index, minus_one_index);
+        let one_index = numbers.iter().position(|p| *p == 1).unwrap();
+        if desert_index != one_index {
+            numbers.swap(desert_index, one_index);
         }
 
         for (idx, &num) in numbers.iter().enumerate() {

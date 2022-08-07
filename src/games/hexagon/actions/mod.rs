@@ -32,7 +32,7 @@ impl Command {
     pub fn new(action: Actions, player: String) -> Command {
         Command { 
             action, 
-            player: player.clone(),
+            player,
             target: [None; 5]
         }
     }
@@ -232,7 +232,8 @@ pub fn build_node(
 
 }
 
-pub fn count_player_nodes(player_key: &String, nodes: &Vec<Node>) -> u8 {
+// TODO: Create a trait around having a player key and then make this function generic
+pub fn count_player_nodes(player_key: &String, nodes: &[Node]) -> u8 {
     let num_player_nodes: u8 = nodes.iter().fold(
         0,
         | mut acc, cv | {
@@ -249,7 +250,7 @@ pub fn count_player_nodes(player_key: &String, nodes: &Vec<Node>) -> u8 {
 }
 
 // TODO: Create a trait around having a player key and then make this function generic
-pub fn count_player_roads(player_key: &String, roads: &Vec<Road>) -> usize {
+pub fn count_player_roads(player_key: &String, roads: &[Road]) -> usize {
     let num_player_roads: usize = roads.iter().fold(
         0,
         | mut acc, cv | {
