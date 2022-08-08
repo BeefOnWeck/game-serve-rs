@@ -1,6 +1,7 @@
 use rand::{thread_rng, Rng};
 
 use super::board::{ Road, Node, BuildingType };
+use super::resources::{Resource};
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum Actions {
@@ -18,14 +19,14 @@ pub enum Actions {
 pub enum Target {
     Road,
     Node,
-    Hex,
-    Resource
+    Hex
 }
 
 pub struct Command {
     pub action: Actions,
     pub player: String,
-    pub target: [Option<(Target,usize)>; 5]
+    pub target: [Option<(Target,usize)>; 5],
+    pub trade: Option<(Resource,Resource)>
 }
 
 impl Command {
@@ -33,7 +34,8 @@ impl Command {
         Command { 
             action, 
             player,
-            target: [None; 5]
+            target: [None; 5],
+            trade: None
         }
     }
 
@@ -57,6 +59,10 @@ impl Command {
             .filter(|t| t.is_some() && t.unwrap().0 == cmd_tgt)
             .map(|t| t.unwrap().1)
             .collect()
+    }
+
+    pub fn get_trade(&self) -> Result<(Resource,Resource),&'static str> {
+        self.trade.ok_or("No resources were specified in the trade.")
     }
 }
 

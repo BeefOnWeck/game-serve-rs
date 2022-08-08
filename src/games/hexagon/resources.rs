@@ -101,6 +101,13 @@ impl ResourceList {
         if can_pay_the_bill { Ok(()) }
         else { Err("Not enough resources to build.") }
     }
+
+    pub fn trade(&mut self, have: Resource, want: Resource) -> Result<(),&'static str> {
+        self.check([have;3])?;
+        self.deduct([have;3])?;
+        self.deposit([want])?;
+        Ok(())
+    }
 }
 
 #[cfg(test)]
@@ -156,4 +163,32 @@ fn credit_check() {
     let _status = resource_list.deposit([Resource::Block, Resource::Timber]);
     let check = resource_list.check([Resource::Block, Resource::Block, Resource::Timber]);
     assert_eq!(check, Ok(()));
+}
+
+#[test]
+fn trade_resources() {
+    let mut resource_list = ResourceList::new();
+    resource_list.deposit([Resource::Fiber, Resource::Fiber, Resource::Fiber]).unwrap();
+    assert_eq!(
+        resource_list.to_array(),
+        [
+            (Resource::Block, 0),
+            (Resource::Rock, 0),
+            (Resource::Timber, 0),
+            (Resource::Fiber, 3),
+            (Resource::Cereal, 0)
+        ]
+    );
+
+    resource_list.trade(Resource::Fiber, Resource::Rock).unwrap();
+    assert_eq!(
+        resource_list.to_array(),
+        [
+            (Resource::Block, 0),
+            (Resource::Rock, 1),
+            (Resource::Timber, 0),
+            (Resource::Fiber, 0),
+            (Resource::Cereal, 0)
+        ]
+    );
 }

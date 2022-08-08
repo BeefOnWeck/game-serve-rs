@@ -101,7 +101,8 @@ fn can_roll_the_dice() {
     let command = Command {
         action: Actions::RollDice,
         player: String::from("key1"),
-        target: [None; 5]
+        target: [None; 5],
+        trade: None
     };
     game.process_action(command).unwrap();
     assert!(game.roll_result != (0,0));

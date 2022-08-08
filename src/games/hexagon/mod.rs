@@ -336,6 +336,18 @@ impl Game for HexagonIsland {
                         self.last_action = command.action;
                         Ok(self)
                     },
+                    Actions::Trade => {
+                        let resources = self.player_resources
+                            .get_mut(&command.player)
+                            .ok_or("Can't get player resources.")?;
+
+                        let trades = command.get_trade()?;
+
+                        resources.trade(trades.0, trades.1)?;
+
+                        self.last_action = command.action;
+                        Ok(self)
+                    },
                     Actions::EndTurn => {
                         self.find_the_winner();
                         match &self.the_winner {
