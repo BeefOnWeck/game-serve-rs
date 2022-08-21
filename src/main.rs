@@ -7,7 +7,7 @@
 //! ```
 
 mod games;
-use games::hexagon::{HexagonIsland};
+use games::hexagon::HexagonIsland;
 use crate::games::core::traits::Game;
 
 use rand::{thread_rng, Rng};
@@ -26,9 +26,9 @@ use futures::{sink::SinkExt, stream::StreamExt};
 use std::{
     collections::HashSet,
     net::SocketAddr,
-    sync::{Arc, Mutex},
+    sync::Arc,
 };
-use tokio::sync::broadcast;
+use tokio::sync::{broadcast, Mutex};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 // Our shared state
@@ -84,7 +84,7 @@ async fn websocket(stream: WebSocket, state: Arc<AppState>) {
     while let Some(Ok(message)) = ws_receiver.next().await {
         if let Message::Text(name) = message {
             // If username that is sent by client is not taken, fill username string.
-            check_username(&state, &mut username, &name);
+            check_username(&state, &mut username, &name).await;
 
             // If not empty we want to quit the loop else we want to quit function.
             if !username.is_empty() {
@@ -93,8 +93,18 @@ async fn websocket(stream: WebSocket, state: Arc<AppState>) {
                     .take(16)
                     .map(char::from)
                     .collect();
-                state.game.lock().unwrap().add_player(&key, &username, "socket_id");
-                break;
+                let mut game = state.game.lock().await;
+                let result = game.add_player(&key, &username, "socket_id");
+                match result {
+                    Ok(_) => break,
+                    Err(msg) => {
+                        let _ = ws_sender
+                            .send(Message::Text(String::from(msg)))
+                            .await;
+
+                        return;
+                    }
+                }
             } else {
                 // Only send our client that username is taken.
                 let _ = ws_sender
@@ -156,11 +166,11 @@ async fn websocket(stream: WebSocket, state: Arc<AppState>) {
     tracing::debug!("{}", msg);
     let _ = state.tx.send(msg);
     // Remove username from map so new clients can take it.
-    state.user_set.lock().unwrap().remove(&username);
+    state.user_set.lock().await.remove(&username);
 }
 
-fn check_username(state: &AppState, string: &mut String, name: &str) {
-    let mut user_set = state.user_set.lock().unwrap();
+async fn check_username(state: &AppState, string: &mut String, name: &str) {
+    let mut user_set = state.user_set.lock().await;
 
     if !user_set.contains(name) {
         user_set.insert(name.to_owned());
