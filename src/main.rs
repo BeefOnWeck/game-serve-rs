@@ -6,6 +6,13 @@
 //! cd examples && cargo run -p example-chat
 //! ```
 
+mod games;
+use games::hexagon::{HexagonIsland};
+use crate::games::core::traits::Game;
+
+use rand::{thread_rng, Rng};
+use rand::distributions::Alphanumeric;
+
 use axum::{
     extract::{
         ws::{Message, WebSocket, WebSocketUpgrade},
@@ -28,6 +35,7 @@ use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 struct AppState {
     user_set: Mutex<HashSet<String>>,
     tx: broadcast::Sender<String>,
+    game: Mutex<HexagonIsland>
 }
 
 #[tokio::main]
@@ -41,8 +49,9 @@ async fn main() {
 
     let user_set = Mutex::new(HashSet::new());
     let (tx, _rx) = broadcast::channel(100);
+    let game = Mutex::new(HexagonIsland::new());
 
-    let app_state = Arc::new(AppState { user_set, tx });
+    let app_state = Arc::new(AppState { user_set, tx, game });
 
     let app = Router::new()
         .route("/", get(index))
@@ -67,22 +76,28 @@ async fn websocket_handler(
 // on upgrade to ws
 async fn websocket(stream: WebSocket, state: Arc<AppState>) {
     // By splitting we can send and receive at the same time.
-    let (mut sender, mut receiver) = stream.split();
+    let (mut ws_sender, mut ws_receiver) = stream.split();
 
     // Username gets set in the receive loop, if it's valid.
     let mut username = String::new();
     // Loop until a text message is found.
-    while let Some(Ok(message)) = receiver.next().await {
+    while let Some(Ok(message)) = ws_receiver.next().await {
         if let Message::Text(name) = message {
             // If username that is sent by client is not taken, fill username string.
             check_username(&state, &mut username, &name);
 
             // If not empty we want to quit the loop else we want to quit function.
             if !username.is_empty() {
+                let key: String = thread_rng()
+                    .sample_iter(&Alphanumeric)
+                    .take(16)
+                    .map(char::from)
+                    .collect();
+                state.game.lock().unwrap().add_player(&key, &username, "socket_id");
                 break;
             } else {
                 // Only send our client that username is taken.
-                let _ = sender
+                let _ = ws_sender
                     .send(Message::Text(String::from("Username already taken.")))
                     .await;
 
@@ -102,8 +117,9 @@ async fn websocket(stream: WebSocket, state: Arc<AppState>) {
     // This task will receive broadcast messages and send text message to our client.
     let mut send_task = tokio::spawn(async move {
         while let Ok(msg) = rx.recv().await {
+            // TODO: This message will contain the updated state. We need to customize this for each player and then send it via WS.
             // In any websocket error, break loop.
-            if sender.send(Message::Text(msg)).await.is_err() {
+            if ws_sender.send(Message::Text(msg)).await.is_err() {
                 break;
             }
         }
@@ -115,9 +131,10 @@ async fn websocket(stream: WebSocket, state: Arc<AppState>) {
 
     // This task will receive messages from client and send them to broadcast subscribers.
     let mut recv_task = tokio::spawn(async move {
-        while let Some(Ok(Message::Text(text))) = receiver.next().await {
+        while let Some(Ok(Message::Text(text))) = ws_receiver.next().await {
             // Add username before message.
             let _ = tx.send(format!("{}: {}", name, text));
+            // TODO: We receive a WS message from a client, process that command to update state, and then send that updated state to each task.
         }
     });
 

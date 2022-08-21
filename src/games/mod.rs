@@ -1,2 +1,2 @@
-mod core;
-mod hexagon;
+pub mod core;
+pub mod hexagon;

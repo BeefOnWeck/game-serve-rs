@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::sync::Arc;
 use super::*;
 use playe::Player;
 
@@ -100,22 +100,22 @@ fn game_status() {
         .add_player("key4", "name4", "socket_id4").unwrap();
     let game_status = game.get_game_status();
     let player_list = vec![
-        Rc::new( Player { 
+        Arc::new( Player { 
             key: String::from("key1"), 
             name: String::from("name1"), 
             socket_id: String::from("socket_id1") 
         } ),
-        Rc::new( Player { 
+        Arc::new( Player { 
             key: String::from("key2"),
             name: String::from("name2"),
             socket_id: String::from("socket_id2")
         } ),
-        Rc::new( Player { 
+        Arc::new( Player { 
             key: String::from("key3"),
             name: String::from("name3"),
             socket_id: String::from("socket_id3")
         } ),
-        Rc::new( Player { 
+        Arc::new( Player { 
             key: String::from("key4"),
             name: String::from("name4"),
             socket_id: String::from("socket_id4")
@@ -127,8 +127,8 @@ fn game_status() {
             phase: Phase::Play,
             round: 1,
             players: Players {
-                list: player_list.iter().map(| p | { Rc::clone(&p) }).collect(),
-                active_player: Some(Rc::clone(&player_list[0])),
+                list: player_list.iter().map(| p | { Arc::clone(&p) }).collect(),
+                active_player: Some(Arc::clone(&player_list[0])),
                 cardinality: 4,
             },
             last_action: Actions::None,

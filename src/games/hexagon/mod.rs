@@ -25,21 +25,21 @@ use resources::{ Resource, ResourceList };
 
 use self::actions::build_node;
 
-struct Status {
+pub struct Status {
     phase: Phase,
     round: u16,
     players: Players
 }
 
 #[derive(Debug, PartialEq)]
-struct Config {
+pub struct Config {
     num_players: usize,
     score_to_win: u8,
     game_board_width: u8
 }
 
 #[derive(Debug, PartialEq)]
-struct HexagonIsland {
+pub struct HexagonIsland {
     phase: Phase,
     round: u16,
     players: Players,
@@ -109,6 +109,8 @@ impl Game for HexagonIsland {
         if self.players.cardinality == self.config.num_players {
             return Err("Cannot add player; exceeds maximum number of players.");
         }
+
+        println!("Added player");
 
         self.player_colors.insert(String::from(key), get_player_color(self.players.cardinality));
         self.player_resources.insert(String::from(key), ResourceList::new());

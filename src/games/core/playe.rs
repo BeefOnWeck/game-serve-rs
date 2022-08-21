@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::sync::Arc;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Player {
@@ -9,8 +9,8 @@ pub struct Player {
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Players {
-    pub list: Vec<Rc<Player>>,
-    pub active_player: Option<Rc<Player>>,
+    pub list: Vec<Arc<Player>>,
+    pub active_player: Option<Arc<Player>>,
     pub cardinality: usize
 }
 
@@ -25,7 +25,7 @@ impl Players {
 
     pub fn add_player(&mut self, key: &str, name: &str, socket_id: &str) -> &mut Players {
         self.list.push(
-            Rc::new(
+            Arc::new(
                 Player { 
                     key: String::from(key), 
                     name: String::from(name), 
@@ -34,7 +34,7 @@ impl Players {
             )
         );
         if self.list.len() == 1 {
-            self.active_player = Some(Rc::clone(&self.list[0]));
+            self.active_player = Some(Arc::clone(&self.list[0]));
         }
         self.cardinality += 1;
 
@@ -45,7 +45,7 @@ impl Players {
         let pki = self.list.iter().position(|p| p.key.as_str() == key);
         match pki {
             Some(pki) => {
-                self.active_player = Some(Rc::clone(&self.list[pki]));
+                self.active_player = Some(Arc::clone(&self.list[pki]));
                 Ok(self)
             },
             None => Err("Player key not found!")
@@ -61,7 +61,7 @@ impl Players {
         match active_player_index {
             Some(idx) => {
                 let next_player_index = (idx as i8 + advance) as usize % self.cardinality;
-                self.active_player = Some(Rc::clone(&self.list[next_player_index]));
+                self.active_player = Some(Arc::clone(&self.list[next_player_index]));
                 Ok(self)
             },
             None => Err("Cannot get index of active player!")
