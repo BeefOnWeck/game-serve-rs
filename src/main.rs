@@ -33,7 +33,6 @@ use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 // Our shared state
 struct AppState {
-    user_set: Mutex<HashSet<String>>,
     tx: broadcast::Sender<String>,
     game: Mutex<HexagonIsland>
 }
@@ -47,11 +46,10 @@ async fn main() {
         .with(tracing_subscriber::fmt::layer())
         .init();
 
-    let user_set = Mutex::new(HashSet::new());
     let (tx, _rx) = broadcast::channel(100);
     let game = Mutex::new(HexagonIsland::new());
 
-    let app_state = Arc::new(AppState { user_set, tx, game });
+    let app_state = Arc::new(AppState { tx, game });
 
     let app = Router::new()
         .route("/", get(index))
@@ -83,29 +81,19 @@ async fn websocket(stream: WebSocket, state: Arc<AppState>) {
     // Loop until a text message is found.
     while let Some(Ok(message)) = ws_receiver.next().await {
         if let Message::Text(name) = message {
-            // If username that is sent by client is not taken, fill username string.
-            check_username(&state, &mut username, &name).await;
 
-            // If not empty we want to quit the loop else we want to quit function.
-            if !username.is_empty() {
-                let attempt = add_player(&state, &username);
-                match attempt {
-                    None => break,
-                    Some(msg) => {
-                        let _ = ws_sender
-                            .send(Message::Text(String::from(msg)))
-                            .await;
+            username = String::from(name.clone());
 
-                        return;
-                    }
-                } // `result` borrows game, which is not Send, and is only dropped after here
-            } else {
-                // Only send our client that username is taken.
-                let _ = ws_sender
-                    .send(Message::Text(String::from("Username already taken.")))
-                    .await;
+            let attempt = add_player(&state, &name);
+            match attempt {
+                None => break,
+                Some(msg) => {
+                    let _ = ws_sender
+                        .send(Message::Text(String::from(msg)))
+                        .await;
 
-                return;
+                    return;
+                }
             }
         }
     }
@@ -159,8 +147,7 @@ async fn websocket(stream: WebSocket, state: Arc<AppState>) {
     let msg = format!("{} left.", username);
     tracing::debug!("{}", msg);
     let _ = state.tx.send(msg);
-    // Remove username from map so new clients can take it.
-    state.user_set.lock().unwrap().remove(&username);
+
 }
 
 fn add_player(state: &AppState, name: &str) -> Option<&'static str> {
@@ -175,16 +162,6 @@ fn add_player(state: &AppState, name: &str) -> Option<&'static str> {
     match result {
         Ok(_) => None,
         Err(msg) => Some(msg)
-    }
-}
-
-async fn check_username(state: &AppState, string: &mut String, name: &str) {
-    let mut user_set = state.user_set.lock().unwrap();
-
-    if !user_set.contains(name) {
-        user_set.insert(name.to_owned());
-
-        string.push_str(name);
     }
 }
 
