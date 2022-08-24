@@ -70,9 +70,6 @@ async fn websocket_handler(
     ws: WebSocketUpgrade,
     Extension(state): Extension<Arc<AppState>>,
 ) -> impl IntoResponse {
-    // Error: future cannot be sent between threads safely within `impl futures::Future<Output = ()>`, 
-    //        the trait `std::marker::Send` is not implemented for 
-    //        `std::sync::MutexGuard<'_, hexagon::HexagonIsland>`
     ws.on_upgrade(|socket| websocket(socket, state))
 }
 
@@ -91,17 +88,10 @@ async fn websocket(stream: WebSocket, state: Arc<AppState>) {
 
             // If not empty we want to quit the loop else we want to quit function.
             if !username.is_empty() {
-                let key: String = thread_rng()
-                    .sample_iter(&Alphanumeric)
-                    .take(16)
-                    .map(char::from)
-                    .collect();
-                let mut game = state.game.lock().unwrap();
-                let result = game.add_player(&key, &username, "socket_id");
-                match result {
-                    Ok(_) => break,
-                    Err(msg) => {
-                        // Error: future is not `Send` as this value is used across an await
+                let attempt = add_player(&state, &username);
+                match attempt {
+                    None => break,
+                    Some(msg) => {
                         let _ = ws_sender
                             .send(Message::Text(String::from(msg)))
                             .await;
@@ -171,6 +161,21 @@ async fn websocket(stream: WebSocket, state: Arc<AppState>) {
     let _ = state.tx.send(msg);
     // Remove username from map so new clients can take it.
     state.user_set.lock().unwrap().remove(&username);
+}
+
+fn add_player(state: &AppState, name: &str) -> Option<&'static str> {
+    let key: String = thread_rng()
+        .sample_iter(&Alphanumeric)
+        .take(16)
+        .map(char::from)
+        .collect();
+
+    let mut game = state.game.lock().unwrap();
+    let result = game.add_player(&key, name, "socket_id");
+    match result {
+        Ok(_) => None,
+        Err(msg) => Some(msg)
+    }
 }
 
 async fn check_username(state: &AppState, string: &mut String, name: &str) {
