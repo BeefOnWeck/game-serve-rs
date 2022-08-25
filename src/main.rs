@@ -24,12 +24,12 @@ use axum::{
 };
 use futures::{sink::SinkExt, stream::StreamExt};
 use std::{
-    collections::HashSet,
     net::SocketAddr,
     sync::{Arc, Mutex},
 };
 use tokio::sync::broadcast;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
+use serde_json::to_string;
 
 // Our shared state
 struct AppState {
@@ -102,7 +102,8 @@ async fn websocket(stream: WebSocket, state: Arc<AppState>) {
     let mut rx = state.tx.subscribe();
 
     // Send joined message to all subscribers.
-    let msg = format!("{} joined.", username);
+    // let msg = format!("{} joined.", username);
+    let msg = serialize_game_state(&state);
     tracing::debug!("{}", msg);
     let _ = state.tx.send(msg);
 
@@ -163,6 +164,11 @@ fn add_player(state: &AppState, name: &str) -> Option<&'static str> {
         Ok(_) => None,
         Err(msg) => Some(msg)
     }
+}
+
+fn serialize_game_state(state: &AppState) -> String {
+    let game = state.game.lock().unwrap();
+    to_string(&*game).unwrap()
 }
 
 // Include utf-8 file at **compile** time.
