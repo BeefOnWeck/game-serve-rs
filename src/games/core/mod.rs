@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use serde::{Serialize, Deserialize};
 
 pub mod traits;
 use traits::Game;
@@ -6,7 +7,7 @@ use traits::Game;
 pub mod playe;
 use playe::Players;
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub enum Phase {
     Boot,
     Setup,

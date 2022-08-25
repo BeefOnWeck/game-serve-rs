@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use serde::{Serialize, Deserialize};
 
 use crate::games::core::Phase;
 use crate::games::core::playe::Players;
@@ -19,7 +20,7 @@ use actions::{
     count_player_nodes,
     count_player_roads
 };
-use board::{ GameBoard };
+use board::GameBoard;
 use colo::get_player_color;
 use resources::{ Resource, ResourceList };
 
@@ -31,14 +32,14 @@ pub struct Status {
     players: Players
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct Config {
     num_players: usize,
     score_to_win: u8,
     game_board_width: u8
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct HexagonIsland {
     phase: Phase,
     round: u16,

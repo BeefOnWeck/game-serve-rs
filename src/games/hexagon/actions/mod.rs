@@ -1,9 +1,10 @@
 use rand::{thread_rng, Rng};
+use serde::{Serialize, Deserialize};
 
 use super::board::{ Road, Node, BuildingType };
 use super::resources::{Resource};
 
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub enum Actions {
     PlaceVillageAndRoad,
     RollDice,

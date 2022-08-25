@@ -82,10 +82,10 @@ async fn websocket(stream: WebSocket, state: Arc<AppState>) {
     while let Some(Ok(message)) = ws_receiver.next().await {
         if let Message::Text(name) = message {
 
-            username = String::from(name.clone());
+            username = String::from(&name);
 
-            let attempt = add_player(&state, &name);
-            match attempt {
+            let error = add_player(&state, &name);
+            match error {
                 None => break,
                 Some(msg) => {
                     let _ = ws_sender

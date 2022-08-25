@@ -1,5 +1,6 @@
+use serde::{Serialize, Deserialize};
 
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub enum Resource {
     Block,
     Rock,
@@ -9,7 +10,7 @@ pub enum Resource {
     Desert
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct ResourceList {
     pub block: u16,
     pub rock: u16,

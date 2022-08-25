@@ -1,48 +1,49 @@
 use std::collections::HashMap;
 use rand::thread_rng;
 use rand::seq::SliceRandom;
+use serde::{Serialize, Deserialize};
 
 use crate::games::hexagon::resources::Resource;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct Coordinate {
     x: f64,
     y: f64
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct Centroid {
     loc: Coordinate,
     number: u8
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct Hexagon {
     pub vertices: Vec<Coordinate>,
     pub number: u8,
     pub resource: Resource
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub enum BuildingType {
     Village,
     Empty
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct Node {
     pub loc: Coordinate,
     pub player_key: Option<String>,
     pub building_type: BuildingType
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct Road {
     pub inds: (usize,usize),
     pub player_key: Option<String>
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct GameBoard {
     pub centroids: Vec<Centroid>,
     pub nodes: Vec<Node>,

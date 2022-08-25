@@ -1,13 +1,14 @@
 use std::sync::Arc;
+use serde::{Serialize, Deserialize};
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Player {
     pub key: String,
     pub name: String,
     pub socket_id: String
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Players {
     pub list: Vec<Arc<Player>>,
     pub active_player: Option<Arc<Player>>,
