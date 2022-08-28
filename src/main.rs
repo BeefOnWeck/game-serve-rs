@@ -78,6 +78,8 @@ async fn websocket(stream: WebSocket, state: Arc<AppState>) {
 
     // Username gets set in the receive loop, if it's valid.
     let mut username = String::new();
+    let mut key = String::new();
+
     // Loop until a text message is found.
     while let Some(Ok(message)) = ws_receiver.next().await {
         if let Message::Text(name) = message {
@@ -86,8 +88,11 @@ async fn websocket(stream: WebSocket, state: Arc<AppState>) {
 
             let error = add_player(&state, &name);
             match error {
-                None => break,
-                Some(msg) => {
+                Ok(val) => {
+                    key = val;
+                    break;
+                },
+                Err(msg) => {
                     let _ = ws_sender
                         .send(Message::Text(String::from(msg)))
                         .await;
@@ -112,7 +117,7 @@ async fn websocket(stream: WebSocket, state: Arc<AppState>) {
         while let Ok(msg) = rx.recv().await {
             // TODO: This message will contain the updated state. We need to customize this for each player and then send it via WS.
             // In any websocket error, break loop.
-            if ws_sender.send(Message::Text(msg)).await.is_err() {
+            if ws_sender.send(Message::Text(key.clone())).await.is_err() {
                 break;
             }
         }
@@ -151,7 +156,7 @@ async fn websocket(stream: WebSocket, state: Arc<AppState>) {
 
 }
 
-fn add_player(state: &AppState, name: &str) -> Option<&'static str> {
+fn add_player(state: &AppState, name: &str) -> Result<String,&'static str> {
     let key: String = thread_rng()
         .sample_iter(&Alphanumeric)
         .take(16)
@@ -161,8 +166,8 @@ fn add_player(state: &AppState, name: &str) -> Option<&'static str> {
     let mut game = state.game.lock().unwrap();
     let result = game.add_player(&key, name, "socket_id");
     match result {
-        Ok(_) => None,
-        Err(msg) => Some(msg)
+        Ok(_) => Ok(key),
+        Err(msg) => Err(msg)
     }
 }
 
