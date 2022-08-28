@@ -1,3 +1,4 @@
+use std::fmt;
 use std::collections::HashMap;
 use serde::{Serialize, Deserialize};
 
@@ -22,6 +23,17 @@ impl Phase {
             Phase::Setup => Phase::Play,
             Phase::Play => Phase::End,
             Phase::End => Phase::End
+        }
+    }
+}
+
+impl fmt::Display for Phase {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Phase::Boot => write!(f, "Boot"),
+            Phase::Setup => write!(f, "Setup"),
+            Phase::Play => write!(f, "Play"),
+            Phase::End => write!(f, "End"),
         }
     }
 }
@@ -115,14 +127,8 @@ impl Game for Core {
         }
     }
 
-    fn get_game_status(&self) -> Core {
-        Core { 
-            phase: self.phase.clone(),
-            round: self.round,
-            players: self.players.clone(),
-            last_action: self.last_action.clone(),
-            config: self.config.clone()
-        }
+    fn get_game_status(&self, key: &str) -> String {
+        String::from("")
     }
 
     fn find_the_winner(&mut self) -> &mut Self {

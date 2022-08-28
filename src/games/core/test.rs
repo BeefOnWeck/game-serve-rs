@@ -98,7 +98,7 @@ fn game_status() {
         .add_player("key2", "name2", "socket_id2").unwrap()
         .add_player("key3", "name3", "socket_id3").unwrap()
         .add_player("key4", "name4", "socket_id4").unwrap();
-    let game_status = game.get_game_status();
+    let game_status = game.get_game_status("key1");
     let player_list = vec![
         Arc::new( Player { 
             key: String::from("key1"), 
@@ -123,17 +123,7 @@ fn game_status() {
     ];
     assert_eq!(
         game_status,
-        Core {
-            phase: Phase::Play,
-            round: 1,
-            players: Players {
-                list: player_list.iter().map(| p | { Arc::clone(&p) }).collect(),
-                active_player: Some(Arc::clone(&player_list[0])),
-                cardinality: 4,
-            },
-            last_action: Actions::None,
-            config: HashMap::new()
-        }
+        String::from("")
     )
 }
 

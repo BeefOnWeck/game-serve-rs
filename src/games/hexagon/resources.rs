@@ -10,7 +10,7 @@ pub enum Resource {
     Desert
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct ResourceList {
     pub block: u16,
     pub rock: u16,

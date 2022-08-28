@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use serde::{Serialize, Deserialize};
+use serde_json::to_string;
 
 use crate::games::core::Phase;
 use crate::games::core::playe::Players;
@@ -26,10 +27,13 @@ use resources::{ Resource, ResourceList };
 
 use self::actions::build_node;
 
+#[derive(Serialize)]
 pub struct Status {
+    key: String,
     phase: Phase,
     round: u16,
-    players: Players
+    colors: HashMap<String, String>,
+    resources: ResourceList
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
@@ -153,12 +157,18 @@ impl Game for HexagonIsland {
         }
     }
 
-    fn get_game_status(&self) -> Status {
-        Status { 
-            phase: self.phase.clone(),
-            round: self.round,
-            players: self.players.clone()
-        }
+    fn get_game_status(&self, key: &str) -> String {
+        let status = String::new() + 
+            "{" +
+                "\"key\": " + "\"" + key + "\"," +
+                "\"phase\": " + "\"" + &self.phase.to_string() + "\"," +
+                "\"round\": " + &self.round.to_string() + "," +
+                "\"colors\": " + &to_string(&self.player_colors).unwrap() + "," +
+                "\"resources\": " + &to_string(self.player_resources.get(key).unwrap()).unwrap() + "," +
+                "\"board\": " + &to_string(&self.board).unwrap() +
+            "}";
+
+        status
     }
 
     fn configure_game(&mut self, config: Self::Config) -> Result<&mut Self, &'static str> {

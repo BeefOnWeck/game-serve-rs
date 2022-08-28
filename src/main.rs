@@ -108,7 +108,7 @@ async fn websocket(stream: WebSocket, state: Arc<AppState>) {
 
     // Send joined message to all subscribers.
     // let msg = format!("{} joined.", username);
-    let msg = serialize_game_state(&state);
+    let msg = serialize_game_status(&state, &key);
     tracing::debug!("{}", msg);
     let _ = state.tx.send(msg);
 
@@ -117,7 +117,7 @@ async fn websocket(stream: WebSocket, state: Arc<AppState>) {
         while let Ok(msg) = rx.recv().await {
             // TODO: This message will contain the updated state. We need to customize this for each player and then send it via WS.
             // In any websocket error, break loop.
-            if ws_sender.send(Message::Text(key.clone())).await.is_err() {
+            if ws_sender.send(Message::Text(msg)).await.is_err() {
                 break;
             }
         }
@@ -171,9 +171,9 @@ fn add_player(state: &AppState, name: &str) -> Result<String,&'static str> {
     }
 }
 
-fn serialize_game_state(state: &AppState) -> String {
+fn serialize_game_status(state: &AppState, key: &str) -> String {
     let game = state.game.lock().unwrap();
-    to_string(&*game).unwrap()
+    game.get_game_status(key)
 }
 
 // Include utf-8 file at **compile** time.
