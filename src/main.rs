@@ -29,11 +29,10 @@ use std::{
 };
 use tokio::sync::broadcast;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
-use serde_json::to_string;
 
 // Our shared state
 struct AppState {
-    tx: broadcast::Sender<String>,
+    tx: broadcast::Sender<String>, // TODO: Change this to an enum (message type): State
     game: Mutex<HexagonIsland>
 }
 
@@ -50,6 +49,15 @@ async fn main() {
     let game = Mutex::new(HexagonIsland::new());
 
     let app_state = Arc::new(AppState { tx, game });
+
+    // Broadcast the game state at regular intervals
+    let cloned_app_state = app_state.clone();
+    tokio::spawn(async move {
+        loop {
+            let _ = cloned_app_state.tx.send(String::from("Hi!"));
+            tokio::time::sleep(std::time::Duration::from_secs(3)).await;
+        }
+    });
 
     let app = Router::new()
         .route("/", get(index))
@@ -132,7 +140,9 @@ async fn websocket(stream: WebSocket, state: Arc<AppState>) {
         while let Some(Ok(Message::Text(text))) = ws_receiver.next().await {
             // Add username before message.
             let _ = tx.send(format!("{}: {}", name, text));
+            // TODO: The message may just be a heartbeat response (sent every time client receives state)
             // TODO: We receive a WS message from a client, process that command to update state, and then send that updated state to each task.
+            // NOTE: We might not need to send anything here if we're already sending out state at regular intervals
         }
     });
 
