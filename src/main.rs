@@ -32,7 +32,7 @@ enum BroadcastType {
 
 // Our shared state
 struct AppState {
-    producer: broadcast::Sender<BroadcastType>, // TODO: Change this to an enum (message type): State
+    producer: broadcast::Sender<BroadcastType>,
     game: Mutex<HexagonIsland>
 }
 
@@ -108,9 +108,6 @@ async fn websocket(stream: WebSocket, state: Arc<AppState>) {
     // Subscribe before sending joined message.
     let mut listener = state.producer.subscribe();
 
-    // Send joined message to all subscribers.
-    // let msg = format!("{} joined.", username);
-
     let cloned_app_state = state.clone();
     let cloned_key = key.clone();
 
@@ -152,10 +149,10 @@ async fn websocket(stream: WebSocket, state: Arc<AppState>) {
                         }
                     }
                 },
-                Err(err) => { // Deserialization error
+                Err(_err) => { // Deserialization error
                     let _ = state.producer.send(BroadcastType::Error { 
                         player_key: key.clone(),
-                        message: err.to_string() 
+                        message: "Error: Malformed command".to_string() //err.to_string() 
                     });
                 }
             }
