@@ -1,18 +1,3 @@
-//! Example chat application.
-//!
-//! Run with
-//!
-//! ```not_rust
-//! cd examples && cargo run -p example-chat
-//! ```
-
-mod games;
-use games::hexagon::HexagonIsland;
-use crate::games::core::traits::Game;
-
-use rand::{thread_rng, Rng};
-use rand::distributions::Alphanumeric;
-
 use axum::{
     extract::{
         ws::{Message, WebSocket, WebSocketUpgrade},
@@ -30,9 +15,24 @@ use std::{
 use tokio::sync::broadcast;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
+use serde_json::from_str;
+use rand::{thread_rng, Rng};
+use rand::distributions::Alphanumeric;
+
+mod games;
+use games::hexagon::HexagonIsland;
+use games::hexagon::actions::Command;
+use crate::games::core::traits::Game;
+
+#[derive(Clone)]
+enum BroadcastType {
+    Status,
+    Error {player_key: String, message: String}
+}
+
 // Our shared state
 struct AppState {
-    tx: broadcast::Sender<String>, // TODO: Change this to an enum (message type): State
+    producer: broadcast::Sender<BroadcastType>, // TODO: Change this to an enum (message type): State
     game: Mutex<HexagonIsland>
 }
 
@@ -45,17 +45,17 @@ async fn main() {
         .with(tracing_subscriber::fmt::layer())
         .init();
 
-    let (tx, _rx) = broadcast::channel(100);
+    let (producer, _listener) = broadcast::channel(100);
     let game = Mutex::new(HexagonIsland::new());
 
-    let app_state = Arc::new(AppState { tx, game });
+    let app_state = Arc::new(AppState { producer, game });
 
     // Broadcast the game state at regular intervals
     let cloned_app_state = app_state.clone();
     tokio::spawn(async move {
         loop {
-            let _ = cloned_app_state.tx.send(String::from("Hi!"));
-            tokio::time::sleep(std::time::Duration::from_secs(3)).await;
+            let _ = cloned_app_state.producer.send(BroadcastType::Status);
+            tokio::time::sleep(std::time::Duration::from_secs(1)).await;
         }
     });
 
@@ -82,29 +82,23 @@ async fn websocket_handler(
 // on upgrade to ws
 async fn websocket(stream: WebSocket, state: Arc<AppState>) {
     // By splitting we can send and receive at the same time.
-    let (mut ws_sender, mut ws_receiver) = stream.split();
+    let (mut ws_tx, mut ws_rx) = stream.split();
 
     // Username gets set in the receive loop, if it's valid.
-    let mut username = String::new();
     let mut key = String::new();
 
     // Loop until a text message is found.
-    while let Some(Ok(message)) = ws_receiver.next().await {
+    while let Some(Ok(message)) = ws_rx.next().await {
         if let Message::Text(name) = message {
 
-            username = String::from(&name);
-
-            let error = add_player(&state, &name);
-            match error {
+            let attempt = add_player(&state, &name);
+            match attempt {
                 Ok(val) => {
                     key = val;
                     break;
                 },
                 Err(msg) => {
-                    let _ = ws_sender
-                        .send(Message::Text(String::from(msg)))
-                        .await;
-
+                    let _ = ws_tx.send(Message::Text(String::from(msg))).await;
                     return;
                 }
             }
@@ -112,44 +106,66 @@ async fn websocket(stream: WebSocket, state: Arc<AppState>) {
     }
 
     // Subscribe before sending joined message.
-    let mut rx = state.tx.subscribe();
+    let mut listener = state.producer.subscribe();
 
     // Send joined message to all subscribers.
     // let msg = format!("{} joined.", username);
-    let msg = serialize_game_status(&state, &key);
-    tracing::debug!("{}", msg);
-    let _ = state.tx.send(msg);
+
+    let cloned_app_state = state.clone();
+    let cloned_key = key.clone();
 
     // This task will receive broadcast messages and send text message to our client.
-    let mut send_task = tokio::spawn(async move {
-        while let Ok(msg) = rx.recv().await {
-            // TODO: This message will contain the updated state. We need to customize this for each player and then send it via WS.
-            // In any websocket error, break loop.
-            if ws_sender.send(Message::Text(msg)).await.is_err() {
-                break;
+    let mut websocket_transmit_task = tokio::spawn(async move {
+        while let Ok(broadcast) = listener.recv().await {
+            match broadcast {
+                BroadcastType::Status => {
+                    let serialized = serialize_game_status(&cloned_app_state, &cloned_key);
+                    let _ = ws_tx.send(Message::Text(serialized)).await;
+                },
+                BroadcastType::Error {player_key,message} => {
+                    if *&cloned_key == player_key { 
+                        let _ = ws_tx.send(Message::Text(message)).await;
+                    }
+                }
             }
+            // In any websocket error, break loop.
+            // if ws_tx.send(Message::Text(msg)).await.is_err() {
+            //     break;
+            // }
         }
     });
 
-    // Clone things we want to pass to the receiving task.
-    let tx = state.tx.clone();
-    let name = username.clone();
-
     // This task will receive messages from client and send them to broadcast subscribers.
-    let mut recv_task = tokio::spawn(async move {
-        while let Some(Ok(Message::Text(text))) = ws_receiver.next().await {
-            // Add username before message.
-            let _ = tx.send(format!("{}: {}", name, text));
-            // TODO: The message may just be a heartbeat response (sent every time client receives state)
-            // TODO: We receive a WS message from a client, process that command to update state, and then send that updated state to each task.
-            // NOTE: We might not need to send anything here if we're already sending out state at regular intervals
+    let mut websocket_receive_task = tokio::spawn(async move {
+        while let Some(Ok(Message::Text(text))) = ws_rx.next().await {
+            // Try to deserialize text into a Command struct
+            match from_str::<Command>(&text) {
+                Ok(cmd) => { // Deserialized Command
+                    let attempt = process_command(&state, cmd);
+                    match attempt {
+                        Ok(_) => {},
+                        Err(msg) => {
+                            let _ = state.producer.send(BroadcastType::Error { 
+                                player_key: key.clone(),
+                                message: msg.to_string() 
+                            });
+                        }
+                    }
+                },
+                Err(err) => { // Deserialization error
+                    let _ = state.producer.send(BroadcastType::Error { 
+                        player_key: key.clone(),
+                        message: err.to_string() 
+                    });
+                }
+            }
         }
     });
 
     // If any one of the tasks exit, abort the other.
     tokio::select! {
-        _ = (&mut send_task) => recv_task.abort(),
-        _ = (&mut recv_task) => send_task.abort(),
+        _ = (&mut websocket_transmit_task) => websocket_receive_task.abort(),
+        _ = (&mut websocket_receive_task) => websocket_transmit_task.abort(),
     };
 
     // So the Rx and Tx loops run continuously.
@@ -160,9 +176,9 @@ async fn websocket(stream: WebSocket, state: Arc<AppState>) {
     // Try to automatically reconnect a user if we end up here.
 
     // Send user left message.
-    let msg = format!("{} left.", username);
-    tracing::debug!("{}", msg);
-    let _ = state.tx.send(msg);
+    // let msg = format!("{} left.", username);
+    // tracing::debug!("{}", msg);
+    // let _ = state.producer.send(msg);
 
 }
 
@@ -184,6 +200,15 @@ fn add_player(state: &AppState, name: &str) -> Result<String,&'static str> {
 fn serialize_game_status(state: &AppState, key: &str) -> String {
     let game = state.game.lock().unwrap();
     game.get_game_status(key)
+}
+
+fn process_command(state: &AppState, cmd: Command) -> Result<(),&'static str> {
+    let mut game = state.game.lock().unwrap();
+    let result = game.process_action(cmd);
+    match result {
+        Ok(_) => Ok(()),
+        Err(msg) => Err(msg)
+    }
 }
 
 // Include utf-8 file at **compile** time.

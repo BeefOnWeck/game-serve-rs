@@ -6,7 +6,7 @@ use crate::games::core::Phase;
 use crate::games::core::playe::Players;
 use crate::games::core::traits::Game;
 
-mod actions;
+pub mod actions;
 mod board;
 mod colo;
 mod resources;
@@ -157,6 +157,7 @@ impl Game for HexagonIsland {
         }
     }
 
+    // TODO: Can I just use serde to serialize this?
     fn get_game_status(&self, key: &str) -> String {
         let status = String::new() + 
             "{" +
