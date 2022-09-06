@@ -164,6 +164,9 @@ impl Game for HexagonIsland {
                 "\"key\": " + "\"" + key + "\"," +
                 "\"phase\": " + "\"" + &self.phase.to_string() + "\"," +
                 "\"round\": " + &self.round.to_string() + "," +
+                "\"active_player\": " + &to_string(&self.players.active_player).unwrap() + "," +
+                "\"roll_result\": " + &to_string(&self.roll_result).unwrap() + "," +
+                "\"the_winner\": " + &to_string(&self.the_winner).unwrap() + "," +
                 "\"colors\": " + &to_string(&self.player_colors).unwrap() + "," +
                 "\"resources\": " + &to_string(self.player_resources.get(key).unwrap()).unwrap() + "," +
                 "\"board\": " + &to_string(&self.board).unwrap() +
