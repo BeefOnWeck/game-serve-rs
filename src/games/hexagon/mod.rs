@@ -159,6 +159,13 @@ impl Game for HexagonIsland {
 
     // TODO: Can I just use serde to serialize this?
     fn get_game_status(&self, key: &str) -> String {
+        let mut allowed_actions = Vec::<Actions>::new();
+        if let Some(active_player) = &self.players.active_player {
+            if active_player.key == key { 
+                let roll_sum = self.roll_result.0 + self.roll_result.1;
+                allowed_actions = next_allowed_actions(&self.last_action, roll_sum);
+            }
+        }
         let status = String::new() + 
             "{" +
                 "\"key\": " + "\"" + key + "\"," +
@@ -166,6 +173,7 @@ impl Game for HexagonIsland {
                 "\"round\": " + &self.round.to_string() + "," +
                 "\"active_player\": " + &to_string(&self.players.active_player).unwrap() + "," +
                 "\"roll_result\": " + &to_string(&self.roll_result).unwrap() + "," +
+                "\"allowed_actions\": " + &to_string(&allowed_actions).unwrap() + "," +
                 "\"the_winner\": " + &to_string(&self.the_winner).unwrap() + "," +
                 "\"colors\": " + &to_string(&self.player_colors).unwrap() + "," +
                 "\"resources\": " + &to_string(self.player_resources.get(key).unwrap()).unwrap() + "," +
