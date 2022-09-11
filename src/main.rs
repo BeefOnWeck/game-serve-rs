@@ -84,13 +84,13 @@ async fn websocket(stream: WebSocket, state: Arc<AppState>) {
     // By splitting we can send and receive at the same time.
     let (mut ws_tx, mut ws_rx) = stream.split();
 
-    // Username gets set in the receive loop, if it's valid.
+    // User key gets set in the receive loop, if it's valid.
     let mut key = String::new();
 
-    // Loop until a text message is found.
+    // Loop until an initial message is found.
     while let Some(Ok(message)) = ws_rx.next().await {
         if let Message::Text(name) = message {
-
+            // Try to add this player to game.
             let attempt = add_player(&state, &name);
             match attempt {
                 Ok(val) => {
@@ -98,16 +98,25 @@ async fn websocket(stream: WebSocket, state: Arc<AppState>) {
                     break;
                 },
                 Err(msg) => {
-                    let _ = ws_tx.send(Message::Text(String::from(msg))).await;
+                    let _ = ws_tx.send(
+                        Message::Text(
+                            String::new() +
+                            "{" +
+                            "\"error\": " +
+                            "\"" + msg + "\"" +
+                            "}"
+                        )
+                    ).await;
                     return;
                 }
             }
         }
     }
 
-    // Subscribe before sending joined message.
+    // Subscribe this task to the broadcast channel.
     let mut listener = state.producer.subscribe();
 
+    // Need to make clones that the transmit task will take ownership of.
     let cloned_app_state = state.clone();
     let cloned_key = key.clone();
 
@@ -117,11 +126,27 @@ async fn websocket(stream: WebSocket, state: Arc<AppState>) {
             match broadcast {
                 BroadcastType::Status => {
                     let serialized = serialize_game_status(&cloned_app_state, &cloned_key);
-                    let _ = ws_tx.send(Message::Text(serialized)).await;
+                    let _ = ws_tx.send(
+                        Message::Text(
+                            String::new() +
+                            "{" +
+                            "\"state\": " +
+                            &serialized +
+                            "}"
+                        )
+                    ).await;
                 },
                 BroadcastType::Error {player_key,message} => {
                     if *&cloned_key == player_key { 
-                        let _ = ws_tx.send(Message::Text(message)).await;
+                        let _ = ws_tx.send(
+                            Message::Text(
+                                String::new() +
+                                "{" +
+                                "\"error\": " +
+                                "\"" + &message + "\"" +
+                                "}"
+                            )
+                        ).await;
                     }
                 }
             }
