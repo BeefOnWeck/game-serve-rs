@@ -16,14 +16,14 @@ pub enum Actions {
     None
 }
 
-#[derive(Copy, Clone, PartialEq, Deserialize)]
+#[derive(Copy, Clone, PartialEq, Deserialize, Serialize)]
 pub enum Target {
     Road,
     Node,
     Hex
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize)]
 pub struct Command {
     pub action: Actions,
     pub player: String,

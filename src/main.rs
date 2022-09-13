@@ -174,10 +174,10 @@ async fn websocket(stream: WebSocket, state: Arc<AppState>) {
                         }
                     }
                 },
-                Err(_err) => { // Deserialization error
+                Err(err) => { // Deserialization error
                     let _ = state.producer.send(BroadcastType::Error { 
                         player_key: key.clone(),
-                        message: "Error: Malformed command".to_string() //err.to_string() 
+                        message: err.to_string() //"Error: Malformed command".to_string() //err.to_string() 
                     });
                 }
             }

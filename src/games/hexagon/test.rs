@@ -1,4 +1,5 @@
 use super::*;
+use serde_json::to_string;
 
 #[test]
 fn initial_state() {
@@ -394,6 +395,7 @@ fn should_find_the_winner() {
     );
     command.target[0] = Some( (Target::Road, 43) );
     command.target[1] = Some( (Target::Road, 58) );
+    // println!("{:?}", to_string(&command));
     game.process_action(command).unwrap();
 
     let mut command = Command::new(
