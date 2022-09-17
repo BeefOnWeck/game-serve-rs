@@ -212,7 +212,7 @@ fn add_player(state: &AppState, name: &str) -> Result<String,&'static str> {
         .collect();
 
     let mut game = state.game.lock().unwrap();
-    let result = game.add_player(&key, name, "socket_id");
+    let result = game.add_player(&key, name);
     match result {
         Ok(_) => Ok(key),
         Err(msg) => Err(msg)

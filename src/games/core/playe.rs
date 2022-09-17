@@ -4,8 +4,7 @@ use serde::{Serialize, Deserialize};
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Player {
     pub key: String,
-    pub name: String,
-    pub socket_id: String
+    pub name: String
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -24,13 +23,12 @@ impl Players {
         }
     }
 
-    pub fn add_player(&mut self, key: &str, name: &str, socket_id: &str) -> &mut Players {
+    pub fn add_player(&mut self, key: &str, name: &str) -> &mut Players {
         self.list.push(
             Arc::new(
                 Player { 
                     key: String::from(key), 
-                    name: String::from(name), 
-                    socket_id: String::from(socket_id) 
+                    name: String::from(name)
                 }
             )
         );

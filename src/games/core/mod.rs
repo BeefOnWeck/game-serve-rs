@@ -100,8 +100,8 @@ impl Game for Core {
         self
     }
 
-    fn add_player(&mut self, key: &str, name: &str, socket_id: &str) -> Result<&mut Core, &'static str> {
-        self.players.add_player(key, name, socket_id);
+    fn add_player(&mut self, key: &str, name: &str) -> Result<&mut Core, &'static str> {
+        self.players.add_player(key, name);
 
         Ok(self)
     }

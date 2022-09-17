@@ -30,7 +30,7 @@ fn keep_track_of_round() {
 fn reset_the_game() {
     let mut game = Core::new();
     game.next_phase().next_phase().next_round();
-    game.add_player("key", "name", "socket_id").unwrap();
+    game.add_player("key", "name").unwrap();
     assert_eq!(game.phase, Phase::Play);
     assert_eq!(game.round, 1);
     assert_eq!(game.players.list.len(), 1);
@@ -44,11 +44,10 @@ fn reset_the_game() {
 fn add_players() {
     let mut game = Core::new();
     assert_eq!(game.players.list.len(), 0);
-    game.add_player("key", "name", "socket_id").unwrap();
+    game.add_player("key", "name").unwrap();
     assert_eq!(game.players.list.len(), 1);
     assert_eq!(game.players.list[0].key.as_str(), "key");
     assert_eq!(game.players.list[0].name.as_str(), "name");
-    assert_eq!(game.players.list[0].socket_id.as_str(), "socket_id");
 }
 
 #[test]
@@ -56,7 +55,7 @@ fn active_player() {
     let mut game = Core::new();
     assert_eq!(game.players.list.len(), 0);
     assert_eq!(game.players.active_player, None);
-    game.add_player("key1", "name1", "socket_id1").unwrap().add_player("key2", "name2", "socket_id2").unwrap();
+    game.add_player("key1", "name1").unwrap().add_player("key2", "name2").unwrap();
     assert_eq!(game.players.list.len(), 2);
     assert_eq!(game.players.active_player.as_ref().unwrap().key, String::from("key1"));
     game.set_active_player("key2").unwrap(); // NOTE: Using unwrap() because function returns a Result
@@ -73,10 +72,10 @@ fn active_player() {
 fn next_player() {
     let mut game = Core::new();
     game
-        .add_player("key1", "name1", "socket_id1").unwrap()
-        .add_player("key2", "name2", "socket_id2").unwrap()
-        .add_player("key3", "name3", "socket_id3").unwrap()
-        .add_player("key4", "name4", "socket_id4").unwrap();
+        .add_player("key1", "name1").unwrap()
+        .add_player("key2", "name2").unwrap()
+        .add_player("key3", "name3").unwrap()
+        .add_player("key4", "name4").unwrap();
     assert_eq!(game.players.cardinality, 4);
     assert_eq!(game.players.active_player.as_ref().unwrap().key, String::from("key1"));
     game.next_player().unwrap(); // NOTE: Using unwrap() because function returns a Result
@@ -94,31 +93,27 @@ fn game_status() {
     let mut game = Core::new();
     game.next_phase().next_phase().next_round();
     game
-        .add_player("key1", "name1", "socket_id1").unwrap()
-        .add_player("key2", "name2", "socket_id2").unwrap()
-        .add_player("key3", "name3", "socket_id3").unwrap()
-        .add_player("key4", "name4", "socket_id4").unwrap();
+        .add_player("key1", "name1").unwrap()
+        .add_player("key2", "name2").unwrap()
+        .add_player("key3", "name3").unwrap()
+        .add_player("key4", "name4").unwrap();
     let game_status = game.get_game_status("key1");
     let player_list = vec![
         Arc::new( Player { 
             key: String::from("key1"), 
-            name: String::from("name1"), 
-            socket_id: String::from("socket_id1") 
+            name: String::from("name1")
         } ),
         Arc::new( Player { 
             key: String::from("key2"),
-            name: String::from("name2"),
-            socket_id: String::from("socket_id2")
+            name: String::from("name2")
         } ),
         Arc::new( Player { 
             key: String::from("key3"),
-            name: String::from("name3"),
-            socket_id: String::from("socket_id3")
+            name: String::from("name3")
         } ),
         Arc::new( Player { 
             key: String::from("key4"),
-            name: String::from("name4"),
-            socket_id: String::from("socket_id4")
+            name: String::from("name4")
         } )
     ];
     assert_eq!(

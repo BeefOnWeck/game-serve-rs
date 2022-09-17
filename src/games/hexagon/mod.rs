@@ -109,7 +109,7 @@ impl Game for HexagonIsland {
         self
     }
 
-    fn add_player(&mut self, key: &str, name: &str, socket_id: &str) -> Result<&mut HexagonIsland, &'static str> {
+    fn add_player(&mut self, key: &str, name: &str) -> Result<&mut HexagonIsland, &'static str> {
 
         if self.players.cardinality == self.config.num_players {
             return Err("Cannot add player; exceeds maximum number of players.");
@@ -119,7 +119,7 @@ impl Game for HexagonIsland {
 
         self.player_colors.insert(String::from(key), get_player_color(self.players.cardinality));
         self.player_resources.insert(String::from(key), ResourceList::new());
-        self.players.add_player(key, name, socket_id);
+        self.players.add_player(key, name);
 
         if self.players.cardinality == self.config.num_players { 
             self.next_phase();

@@ -93,8 +93,8 @@ fn should_reset() {
 #[test]
 fn can_roll_the_dice() {
     let mut game = HexagonIsland::new();
-    game.add_player("key1", "name1", "socket_id1").unwrap()
-        .add_player("key2", "name2", "socket_id2").unwrap();
+    game.add_player("key1", "name1").unwrap()
+        .add_player("key2", "name2").unwrap();
     game.phase = Phase::Play;
     game.last_action = Actions::EndTurn;
     assert_eq!(game.roll_result, (0,0));
@@ -119,8 +119,8 @@ fn player_color() {
     };
     game.configure_game(config).unwrap();
 
-    game.add_player("key1", "name1", "socket_id1").unwrap()
-        .add_player("key2", "name2", "socket_id2").unwrap();
+    game.add_player("key1", "name1").unwrap()
+        .add_player("key2", "name2").unwrap();
 
     let mut expected_colors: HashMap<String, String> = HashMap::new();
     expected_colors.insert(String::from("key1"), String::from("#DC143C"));
@@ -134,9 +134,9 @@ fn player_color() {
 fn too_many_players() {
     let mut game = HexagonIsland::new();
 
-    game.add_player("key1", "name1", "socket_id1").unwrap();
-    game.add_player("key2", "name2", "socket_id2").unwrap();
-    let attempt = game.add_player("key3", "name3", "socket_id3");
+    game.add_player("key1", "name1").unwrap();
+    game.add_player("key2", "name2").unwrap();
+    let attempt = game.add_player("key3", "name3");
     assert_eq!(attempt, Err("Cannot add player; exceeds maximum number of players."));
 }
 
@@ -151,8 +151,8 @@ fn game_setup() -> HexagonIsland {
 
     assert_eq!(game.phase, Phase::Boot);
 
-    game.add_player("key1", "name1", "socket_id1").unwrap();
-    game.add_player("key2", "name2", "socket_id2").unwrap();
+    game.add_player("key1", "name1").unwrap();
+    game.add_player("key2", "name2").unwrap();
 
     assert_eq!(game.phase, Phase::Setup);
 
