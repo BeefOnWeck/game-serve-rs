@@ -161,9 +161,17 @@ impl Game for HexagonIsland {
     fn get_game_status(&self, key: &str) -> String {
         let mut allowed_actions = Vec::<Actions>::new();
         if let Some(active_player) = &self.players.active_player {
-            if active_player.key == key { 
-                let roll_sum = self.roll_result.0 + self.roll_result.1;
-                allowed_actions = next_allowed_actions(&self.last_action, roll_sum);
+            if active_player.key == key {
+                if self.phase == Phase::Setup {
+                    allowed_actions = vec![Actions::PlaceVillageAndRoad];
+                } else if self.phase == Phase::Play {
+                    let roll_sum = self.roll_result.0 + self.roll_result.1;
+                    allowed_actions = next_allowed_actions(&self.last_action, roll_sum);
+                } else {
+                    allowed_actions = vec![Actions::None];
+                }
+            } else {
+                allowed_actions = vec![Actions::None];
             }
         }
         let status = String::new() + 
@@ -211,9 +219,15 @@ impl Game for HexagonIsland {
             .ok_or("Can't get active player")?;
         if command.player != active_player.key { return Err("It is not your turn."); }
         
+        println!("{:?}", command);
+
         match self.phase {
             Phase::Setup => match command.action {
                 Actions::PlaceVillageAndRoad => {
+                    println!("{:?}", self.last_action);
+                    if self.last_action != Actions::None && self.last_action != Actions::EndTurn {
+                        return Err("That is not an allowed action right now.");
+                    }
                     let (num_nodes, node_index) = command.get_first(Target::Node);
                     let (num_roads, road_index) = command.get_first(Target::Road);
                     if num_nodes != 1 || num_roads != 1 {
@@ -245,6 +259,10 @@ impl Game for HexagonIsland {
                     Ok(self)
                 },
                 Actions::EndTurn => {
+                    println!("{:?}", self.last_action);
+                    if self.last_action != Actions::PlaceVillageAndRoad {
+                        return Err("That is not an allowed action right now.");
+                    }
                     // TODO: Refactor into a function in board
                     let (
                         all_players_have_exactly_one,
@@ -278,6 +296,8 @@ impl Game for HexagonIsland {
                     }
                     else if all_players_have_at_least_one { self.previous_player()?; }
                     else { self.next_player()?; }
+
+                    self.last_action = Actions::EndTurn;
 
                     Ok(self)
                 },
