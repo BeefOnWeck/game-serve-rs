@@ -171,6 +171,7 @@ impl GameBoard {
         for _ in 0..num_ten { numbers.push(10); }
         for _ in 0..num_eleven { numbers.push(11); }
         for _ in 0..num_twelve { numbers.push(12); }
+        numbers.truncate(self.centroids.len()-1);
         numbers.push(1); // for the Desert
         numbers.shuffle(&mut rng);
 

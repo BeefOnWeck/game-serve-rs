@@ -4,8 +4,10 @@ use axum::{
         Extension,
     },
     response::{Html, IntoResponse},
-    routing::get,
+    http::StatusCode,
+    routing::{get, post},
     Router,
+    Form
 };
 use futures::{sink::SinkExt, stream::StreamExt};
 use std::{
@@ -20,9 +22,10 @@ use rand::{thread_rng, Rng};
 use rand::distributions::Alphanumeric;
 
 mod games;
+use crate::games::core::traits::Game;
 use games::hexagon::HexagonIsland;
 use games::hexagon::actions::Command;
-use crate::games::core::traits::Game;
+use games::hexagon::Config;
 
 #[derive(Clone)]
 enum BroadcastType {
@@ -61,6 +64,7 @@ async fn main() {
 
     let app = Router::new()
         .route("/", get(index))
+        .route("/start", post(start_game))
         .route("/websocket", get(websocket_handler))
         .layer(Extension(app_state)); // injecting state into all the above routes
 
@@ -236,4 +240,17 @@ fn process_command(state: &AppState, cmd: Command) -> Result<(),&'static str> {
 // Include utf-8 file at **compile** time.
 async fn index() -> Html<&'static str> {
     Html(std::include_str!("../assets/index.html"))
+}
+
+async fn start_game(form: Form<Config>, Extension(state): Extension<Arc<AppState>>) -> impl IntoResponse {
+
+    let config = form.0;
+    println!("{:?}", config);
+    let mut game = state.game.lock().unwrap();
+    let result = game.reset().configure_game(config);
+
+    match result {
+        Ok(_) => (StatusCode::CREATED, "Game started"),
+        Err(msg) => (StatusCode::BAD_REQUEST, msg)
+    }
 }
