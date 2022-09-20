@@ -47,7 +47,7 @@ pub struct Config {
 pub struct HexagonIsland {
     phase: Phase,
     round: u16,
-    players: Players,
+    pub players: Players,
     last_action: Actions,
     config: Config,
     roll_result: (u8,u8),

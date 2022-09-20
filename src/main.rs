@@ -10,6 +10,7 @@ use axum::{
     Form
 };
 use futures::{sink::SinkExt, stream::StreamExt};
+use serde::Deserialize;
 use std::{
     net::SocketAddr,
     sync::{Arc, Mutex},
@@ -83,6 +84,12 @@ async fn websocket_handler(
     ws.on_upgrade(|socket| websocket(socket, state))
 }
 
+#[derive(Deserialize)]
+struct Joining {
+    name: String,
+    key: Option<String>
+}
+
 // on upgrade to ws
 async fn websocket(stream: WebSocket, state: Arc<AppState>) {
     // By splitting we can send and receive at the same time.
@@ -93,27 +100,50 @@ async fn websocket(stream: WebSocket, state: Arc<AppState>) {
 
     // Loop until an initial message is found.
     while let Some(Ok(message)) = ws_rx.next().await {
-        if let Message::Text(name) = message {
-            // Try to add this player to game.
-            let attempt = add_player(&state, &name);
-            match attempt {
-                Ok(val) => {
-                    key = val;
-                    break;
+        if let Message::Text(text) = message {
+            match from_str::<Joining>(&text) {
+                Ok(joined) => {
+                    let Joining {name, key: cached_key} = joined;
+                    match cached_key {
+                        Some(ckey) => {
+                            let game = state.game.lock().unwrap();
+                            if game.players.list.iter().any(|p| p.key == ckey) {
+                                key = ckey;
+                                break;
+                            }
+                        },
+                        None => {}
+                    }
+                    // Try to add this player to game.
+                    let attempt = add_player(&state, &name);
+                    match attempt {
+                        Ok(val) => {
+                            key = val;
+                            break;
+                        },
+                        Err(msg) => {
+                            let _ = ws_tx.send(
+                                Message::Text(
+                                    String::new() +
+                                    "{" +
+                                    "\"error\": " +
+                                    "\"" + msg + "\"" +
+                                    "}"
+                                )
+                            ).await;
+                            return;
+                        }
+                    }
                 },
-                Err(msg) => {
-                    let _ = ws_tx.send(
-                        Message::Text(
-                            String::new() +
-                            "{" +
-                            "\"error\": " +
-                            "\"" + msg + "\"" +
-                            "}"
-                        )
-                    ).await;
-                    return;
+                Err(err) => { // Deserialization error
+                    let _ = state.producer.send(BroadcastType::Error { 
+                        player_key: key.clone(),
+                        message: err.to_string()
+                    });
                 }
+
             }
+            
         }
     }
 
@@ -130,7 +160,7 @@ async fn websocket(stream: WebSocket, state: Arc<AppState>) {
             match broadcast {
                 BroadcastType::Status => {
                     let serialized = serialize_game_status(&cloned_app_state, &cloned_key);
-                    let _ = ws_tx.send(
+                    if ws_tx.send(
                         Message::Text(
                             String::new() +
                             "{" +
@@ -138,11 +168,14 @@ async fn websocket(stream: WebSocket, state: Arc<AppState>) {
                             &serialized +
                             "}"
                         )
-                    ).await;
+                    ).await.is_err() {
+                        // break loop on any websocket error
+                        break;
+                    }
                 },
                 BroadcastType::Error {player_key,message} => {
                     if *&cloned_key == player_key { 
-                        let _ = ws_tx.send(
+                        if ws_tx.send(
                             Message::Text(
                                 String::new() +
                                 "{" +
@@ -150,14 +183,13 @@ async fn websocket(stream: WebSocket, state: Arc<AppState>) {
                                 "\"" + &message + "\"" +
                                 "}"
                             )
-                        ).await;
+                        ).await.is_err() {
+                            // break loop on any websocket error
+                            break;
+                        }
                     }
                 }
             }
-            // In any websocket error, break loop.
-            // if ws_tx.send(Message::Text(msg)).await.is_err() {
-            //     break;
-            // }
         }
     });
 
@@ -196,15 +228,6 @@ async fn websocket(stream: WebSocket, state: Arc<AppState>) {
 
     // So the Rx and Tx loops run continuously.
     // If one of them exits then the other is stopped.
-    // Then you would proceed to here, where the user is removed.
-
-    // Will have to add ping/pong messages to ensure connnections are alive.
-    // Try to automatically reconnect a user if we end up here.
-
-    // Send user left message.
-    // let msg = format!("{} left.", username);
-    // tracing::debug!("{}", msg);
-    // let _ = state.producer.send(msg);
 
 }
 
@@ -243,9 +266,9 @@ async fn index() -> Html<&'static str> {
 }
 
 async fn start_game(form: Form<Config>, Extension(state): Extension<Arc<AppState>>) -> impl IntoResponse {
-
+    // Use Form extractor to get configuration that was posted 
+    // as application/x-www-form-urlencoded
     let config = form.0;
-    println!("{:?}", config);
     let mut game = state.game.lock().unwrap();
     let result = game.reset().configure_game(config);
 
