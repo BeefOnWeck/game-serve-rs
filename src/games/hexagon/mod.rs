@@ -105,6 +105,7 @@ impl Game for HexagonIsland {
         self.player_colors.clear();
         self.roll_result = (0,0);
         self.the_winner = None;
+        self.last_action = Actions::None;
 
         self
     }
@@ -174,6 +175,11 @@ impl Game for HexagonIsland {
                 allowed_actions = vec![Actions::None];
             }
         }
+        let resources: ResourceList;
+        match self.player_resources.get(key) {
+            Some(list) => resources = *list,
+            None => resources = ResourceList::new()
+        }
         let status = String::new() + 
             "{" +
                 "\"key\": " + "\"" + key + "\"," +
@@ -184,7 +190,7 @@ impl Game for HexagonIsland {
                 "\"allowed_actions\": " + &to_string(&allowed_actions).unwrap() + "," +
                 "\"the_winner\": " + &to_string(&self.the_winner).unwrap() + "," +
                 "\"colors\": " + &to_string(&self.player_colors).unwrap() + "," +
-                "\"resources\": " + &to_string(self.player_resources.get(key).unwrap()).unwrap() + "," +
+                "\"resources\": " + &to_string(&resources).unwrap() + "," +
                 "\"board\": " + &to_string(&self.board).unwrap() +
             "}";
 
