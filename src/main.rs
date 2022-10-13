@@ -69,7 +69,7 @@ async fn main() {
         .route("/websocket", get(websocket_handler))
         .layer(Extension(app_state)); // injecting state into all the above routes
 
-    let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
+    let addr = SocketAddr::from(([0, 0, 0, 0], 8080));
     tracing::debug!("listening on {}", addr);
     axum::Server::bind(&addr)
         .serve(app.into_make_service())
