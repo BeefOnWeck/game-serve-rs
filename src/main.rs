@@ -40,7 +40,7 @@ struct AppState {
     game: Mutex<HexagonIsland>
 }
 
-#[tokio::main]
+#[tokio::main(flavor = "current_thread")]
 async fn main() {
     tracing_subscriber::registry()
         .with(tracing_subscriber::EnvFilter::new(
