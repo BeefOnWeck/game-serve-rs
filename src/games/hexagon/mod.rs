@@ -184,6 +184,11 @@ impl Game for HexagonIsland {
             Some(list) => resources = *list,
             None => resources = ResourceList::new()
         }
+        let bugs: u8;
+        match self.bugs.get(key) {
+            Some(bug) => bugs = *bug,
+            None => bugs = 0
+        }
         let status = String::new() + 
             "{" +
                 "\"key\": " + "\"" + key + "\"," +
@@ -195,6 +200,7 @@ impl Game for HexagonIsland {
                 "\"the_winner\": " + &to_string(&self.the_winner).unwrap() + "," +
                 "\"colors\": " + &to_string(&self.player_colors).unwrap() + "," +
                 "\"resources\": " + &to_string(&resources).unwrap() + "," +
+                "\"bugs\": " + &to_string(&bugs).unwrap() + "," +
                 "\"board\": " + &to_string(&self.board).unwrap() +
             "}";
 
