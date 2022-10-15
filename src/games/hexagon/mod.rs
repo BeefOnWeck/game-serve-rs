@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use serde::{Serialize, Deserialize};
 use serde_json::to_string;
 
-use crate::games::core::Phase;
+use crate::games::{ core::Phase };
 use crate::games::core::playe::Players;
 use crate::games::core::traits::Game;
 
@@ -10,6 +10,7 @@ pub mod actions;
 mod board;
 mod colo;
 mod resources;
+mod bonuses;
 
 use actions::{ 
     Actions, 
@@ -18,14 +19,14 @@ use actions::{
     next_allowed_actions,
     roll_dice, 
     build_road,
+    build_node,
     count_player_nodes,
     count_player_roads
 };
 use board::GameBoard;
 use colo::get_player_color;
 use resources::{ Resource, ResourceList };
-
-use self::actions::build_node;
+use bonuses::{ find_most_bugs };
 
 #[derive(Serialize)]
 pub struct Status {
@@ -54,6 +55,7 @@ pub struct HexagonIsland {
     player_colors: HashMap<String, String>,
     player_resources: HashMap<String, ResourceList>,
     bugs: HashMap<String, u8>,
+    has_most_bugs: Option<String>,
     board: GameBoard,
     the_winner: Option<String>
 }
@@ -78,6 +80,7 @@ impl Game for HexagonIsland {
             player_colors: HashMap::new(),
             player_resources: HashMap::new(),
             bugs: HashMap::new(),
+            has_most_bugs: None,
             board: GameBoard::new(),
             the_winner: None
         }
@@ -106,6 +109,7 @@ impl Game for HexagonIsland {
         self.player_resources.clear();
         self.player_colors.clear();
         self.bugs.clear();
+        self.has_most_bugs = None;
         self.roll_result = (0,0);
         self.the_winner = None;
         self.last_action = Actions::None;
@@ -201,6 +205,7 @@ impl Game for HexagonIsland {
                 "\"colors\": " + &to_string(&self.player_colors).unwrap() + "," +
                 "\"resources\": " + &to_string(&resources).unwrap() + "," +
                 "\"bugs\": " + &to_string(&bugs).unwrap() + "," +
+                "\"has_most_bugs\": " + &to_string(&self.has_most_bugs).unwrap() + "," +
                 "\"board\": " + &to_string(&self.board).unwrap() +
             "}";
 
@@ -220,6 +225,8 @@ impl Game for HexagonIsland {
     fn find_the_winner(&mut self) -> &mut HexagonIsland {
         for player in self.players.list.iter() {
             let building_score = count_player_nodes(&player.key, &self.board.nodes);
+            // TODO: Longest road bonus
+            // TODO: Most bugs bonus
             let score = building_score;
             if score >= self.config.score_to_win {
                 self.the_winner = Some(player.key.clone());
@@ -377,6 +384,9 @@ impl Game for HexagonIsland {
                             )?;
                             resources.deduct([Resource::Block, Resource::Timber, Resource::Fiber, Resource::Cereal])?;
                         }
+
+                        // TODO: Find the longest road
+                        self.find_the_winner();
                         
                         self.last_action = command.action;
                         Ok(self)
@@ -424,11 +434,13 @@ impl Game for HexagonIsland {
 
                         resources.deduct([Resource::Rock, Resource::Fiber, Resource::Cereal])?;
 
+                        self.has_most_bugs = find_most_bugs(&self.bugs, &self.has_most_bugs);
+                        self.find_the_winner();
+
                         self.last_action = command.action;
                         Ok(self)
                     },
                     Actions::EndTurn => {
-                        self.find_the_winner();
                         match &self.the_winner {
                             Some(_) => { self.next_phase(); }
                             None => { self.next_player()?; }
