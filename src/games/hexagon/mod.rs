@@ -53,6 +53,7 @@ pub struct HexagonIsland {
     roll_result: (u8,u8),
     player_colors: HashMap<String, String>,
     player_resources: HashMap<String, ResourceList>,
+    bugs: HashMap<String, u8>,
     board: GameBoard,
     the_winner: Option<String>
 }
@@ -75,7 +76,8 @@ impl Game for HexagonIsland {
             },
             roll_result: (0,0),
             player_colors: HashMap::new(),
-            player_resources: HashMap::new(), 
+            player_resources: HashMap::new(),
+            bugs: HashMap::new(),
             board: GameBoard::new(),
             the_winner: None
         }
@@ -103,6 +105,7 @@ impl Game for HexagonIsland {
         self.board.reset();
         self.player_resources.clear();
         self.player_colors.clear();
+        self.bugs.clear();
         self.roll_result = (0,0);
         self.the_winner = None;
         self.last_action = Actions::None;
@@ -120,6 +123,7 @@ impl Game for HexagonIsland {
 
         self.player_colors.insert(String::from(key), get_player_color(self.players.cardinality));
         self.player_resources.insert(String::from(key), ResourceList::new());
+        self.bugs.insert(String::from(key), 0);
         self.players.add_player(key, name);
 
         if self.players.cardinality == self.config.num_players { 
@@ -395,6 +399,24 @@ impl Game for HexagonIsland {
                         let trades = command.get_trade()?;
 
                         resources.trade(trades.0, trades.1)?;
+
+                        self.last_action = command.action;
+                        Ok(self)
+                    },
+                    Actions::BuyBug => {
+                        let resources = self.player_resources
+                            .get_mut(&command.player)
+                            .ok_or("Can't get player resources.")?;
+
+                        resources.check([Resource::Rock, Resource::Fiber, Resource::Cereal])?;
+                        
+                        let bugs = self.bugs
+                            .get_mut(&command.player)
+                            .ok_or("Can't get player bugs")?;
+
+                        *bugs = *bugs + 1;
+
+                        resources.deduct([Resource::Rock, Resource::Fiber, Resource::Cereal])?;
 
                         self.last_action = command.action;
                         Ok(self)

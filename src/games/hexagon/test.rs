@@ -1,5 +1,5 @@
 use super::*;
-use serde_json::to_string;
+// use serde_json::to_string;
 
 #[test]
 fn initial_state() {
@@ -22,7 +22,8 @@ fn initial_state() {
             },
             roll_result: (0,0), 
             player_colors: HashMap::new(),
-            player_resources: HashMap::new(), 
+            player_resources: HashMap::new(),
+            bugs: HashMap::new(),
             board: GameBoard::new(),
             the_winner: None
         }
@@ -83,7 +84,8 @@ fn should_reset() {
             },
             roll_result: (0,0),
             player_colors: HashMap::new(),
-            player_resources: HashMap::new(), 
+            player_resources: HashMap::new(),
+            bugs: HashMap::new(),
             board: GameBoard::new(),
             the_winner: None
         }

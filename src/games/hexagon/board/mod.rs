@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use rand::thread_rng;
 use rand::seq::SliceRandom;
 use serde::{Serialize, Deserialize};
@@ -49,7 +48,6 @@ pub struct GameBoard {
     pub nodes: Vec<Node>,
     pub hexagons: Vec<Hexagon>,
     pub roads: Vec<Road>,
-    pub bugs: HashMap<String, u8>,
     pub scorpion_index: Option<usize>
 }
 
@@ -60,7 +58,6 @@ impl GameBoard {
             nodes: Vec::new(), 
             hexagons: Vec::new(), 
             roads: Vec::new(),
-            bugs: HashMap::new(), 
             scorpion_index: None
         }
     }
@@ -70,7 +67,6 @@ impl GameBoard {
         self.nodes.truncate(0);
         self.hexagons.truncate(0);
         self.roads.truncate(0);
-        self.bugs.clear();
         self.scorpion_index = None;
 
         self
