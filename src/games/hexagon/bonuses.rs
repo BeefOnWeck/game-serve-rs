@@ -105,7 +105,7 @@ fn get_road_lengths(roads: &[Road], players: &Players) -> HashMap<String,u8> {
 fn find_max_road_length(roads: Vec<(usize,usize)>) -> u8 {
     let mut max_road_length = 0;
     for road in roads.iter() {
-        let other_roads = roads.iter()
+        let other_roads: Vec<(usize,usize)> = roads.iter()
             .filter(|otr| otr.0 != road.0 || otr.1 != road.1)
             .map(|otr| *otr)
             .collect();
@@ -117,7 +117,6 @@ fn find_max_road_length(roads: Vec<(usize,usize)>) -> u8 {
 
 fn measure_road_segment(road: &(usize,usize), other_roads: Vec<(usize,usize)>) -> u8 {
     let mut max_connecting_length = 0;
-
     let connecting_roads = other_roads.iter().fold(
         Vec::<(usize,usize,usize)>::new(),
         | mut acc, otr | {
@@ -149,5 +148,5 @@ fn measure_road_segment(road: &(usize,usize), other_roads: Vec<(usize,usize)>) -
         if segment_length > max_connecting_length { max_connecting_length = segment_length; }
     }
 
-    max_connecting_length
+    max_connecting_length + 1
 }

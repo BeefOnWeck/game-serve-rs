@@ -228,7 +228,7 @@ impl Game for HexagonIsland {
     fn find_the_winner(&mut self) -> &mut HexagonIsland {
         for player in self.players.list.iter() {
             let building_score = count_player_nodes(&player.key, &self.board.nodes);
-            // TODO: Longest road bonus
+            
             let mut most_bugs_bonus = 0;
             match &self.has_most_bugs {
                 Some(has_most_bugs) => {
@@ -236,7 +236,16 @@ impl Game for HexagonIsland {
                 },
                 None => {}
             }
-            let score = building_score + most_bugs_bonus;
+
+            let mut longest_road_bonus = 0;
+            match &self.has_longest_road {
+                Some(has_longest_road) => {
+                    if player.key == *has_longest_road { longest_road_bonus = 2; }
+                },
+                None => {}
+            }
+
+            let score = building_score + most_bugs_bonus + longest_road_bonus;
             if score >= self.config.score_to_win {
                 self.the_winner = Some(player.key.clone());
             }
