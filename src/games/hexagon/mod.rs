@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use serde::{Serialize, Deserialize};
 use serde_json::to_string;
 
-use crate::games::{ core::Phase };
+use crate::games::core::Phase;
 use crate::games::core::playe::Players;
 use crate::games::core::traits::Game;
 
@@ -26,7 +26,7 @@ use actions::{
 use board::GameBoard;
 use colo::get_player_color;
 use resources::{ Resource, ResourceList };
-use bonuses::{ find_most_bugs };
+use bonuses::{ find_most_bugs, find_longest_road };
 
 #[derive(Serialize)]
 pub struct Status {
@@ -56,6 +56,7 @@ pub struct HexagonIsland {
     player_resources: HashMap<String, ResourceList>,
     bugs: HashMap<String, u8>,
     has_most_bugs: Option<String>,
+    has_longest_road: Option<String>,
     board: GameBoard,
     the_winner: Option<String>
 }
@@ -81,6 +82,7 @@ impl Game for HexagonIsland {
             player_resources: HashMap::new(),
             bugs: HashMap::new(),
             has_most_bugs: None,
+            has_longest_road: None,
             board: GameBoard::new(),
             the_winner: None
         }
@@ -206,6 +208,7 @@ impl Game for HexagonIsland {
                 "\"resources\": " + &to_string(&resources).unwrap() + "," +
                 "\"bugs\": " + &to_string(&bugs).unwrap() + "," +
                 "\"has_most_bugs\": " + &to_string(&self.has_most_bugs).unwrap() + "," +
+                "\"has_longest_road\": " + &to_string(&self.has_longest_road).unwrap() + "," +
                 "\"board\": " + &to_string(&self.board).unwrap() +
             "}";
 
@@ -391,7 +394,7 @@ impl Game for HexagonIsland {
                             resources.deduct([Resource::Block, Resource::Timber, Resource::Fiber, Resource::Cereal])?;
                         }
 
-                        // TODO: Find the longest road
+                        self.has_longest_road = find_longest_road(&self.board.roads, &self.players, &self.has_longest_road);
                         self.find_the_winner();
                         
                         self.last_action = command.action;
