@@ -25,7 +25,9 @@ fn initial_state() {
             player_resources: HashMap::new(),
             bugs: HashMap::new(),
             board: GameBoard::new(),
-            the_winner: None
+            the_winner: None,
+            has_most_bugs: None,
+            has_longest_road: None
         }
     )
 }
@@ -87,7 +89,9 @@ fn should_reset() {
             player_resources: HashMap::new(),
             bugs: HashMap::new(),
             board: GameBoard::new(),
-            the_winner: None
+            the_winner: None,
+            has_most_bugs: None,
+            has_longest_road: None
         }
     )
 }
@@ -146,7 +150,7 @@ fn game_setup() -> HexagonIsland {
     let mut game = HexagonIsland::new();
     let config = Config {
         num_players: 2,
-        score_to_win: 4,
+        score_to_win: 6,
         game_board_width: 5
     };
     game.configure_game(config).unwrap();
