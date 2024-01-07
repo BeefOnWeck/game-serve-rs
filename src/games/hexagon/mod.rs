@@ -58,7 +58,8 @@ pub struct HexagonIsland {
     has_most_bugs: Option<String>,
     has_longest_road: Option<String>,
     board: GameBoard,
-    the_winner: Option<String>
+    the_winner_key: Option<String>,
+    the_winner_name: Option<String>
 }
 
 impl Game for HexagonIsland {
@@ -84,7 +85,8 @@ impl Game for HexagonIsland {
             has_most_bugs: None,
             has_longest_road: None,
             board: GameBoard::new(),
-            the_winner: None
+            the_winner_key: None,
+            the_winner_name: None
         }
     }
 
@@ -113,7 +115,8 @@ impl Game for HexagonIsland {
         self.bugs.clear();
         self.has_most_bugs = None;
         self.roll_result = (0,0);
-        self.the_winner = None;
+        self.the_winner_key = None;
+        self.the_winner_name = None;
         self.last_action = Actions::None;
 
         self
@@ -185,6 +188,16 @@ impl Game for HexagonIsland {
                 allowed_actions = vec![Actions::None];
             }
         }
+        let my_name = self.players.list.iter().fold(
+            String::from("undefined"),
+            | acc, val | {
+                if *val.key == *key {
+                    return String::from(&val.name);
+                } else {
+                    return acc;
+                }
+            }
+        );
         let resources: ResourceList;
         match self.player_resources.get(key) {
             Some(list) => resources = *list,
@@ -198,12 +211,14 @@ impl Game for HexagonIsland {
         let status = String::new() + 
             "{" +
                 "\"key\": " + "\"" + key + "\"," +
+                "\"my_name\": " + "\"" + &my_name + "\"," +
                 "\"phase\": " + "\"" + &self.phase.to_string() + "\"," +
                 "\"round\": " + &self.round.to_string() + "," +
                 "\"active_player\": " + &to_string(&self.players.active_player).unwrap() + "," +
                 "\"roll_result\": " + &to_string(&self.roll_result).unwrap() + "," +
                 "\"allowed_actions\": " + &to_string(&allowed_actions).unwrap() + "," +
-                "\"the_winner\": " + &to_string(&self.the_winner).unwrap() + "," +
+                "\"the_winner_key\": " + &to_string(&self.the_winner_key).unwrap() + "," +
+                "\"the_winner_name\": " + &to_string(&self.the_winner_name).unwrap() + "," +
                 "\"colors\": " + &to_string(&self.player_colors).unwrap() + "," +
                 "\"resources\": " + &to_string(&resources).unwrap() + "," +
                 "\"bugs\": " + &to_string(&bugs).unwrap() + "," +
@@ -247,7 +262,8 @@ impl Game for HexagonIsland {
 
             let score = building_score + most_bugs_bonus + longest_road_bonus;
             if score >= self.config.score_to_win {
-                self.the_winner = Some(player.key.clone());
+                self.the_winner_key = Some(player.key.clone());
+                self.the_winner_name = Some(player.name.clone());
             }
         }
         self
@@ -459,7 +475,7 @@ impl Game for HexagonIsland {
                         Ok(self)
                     },
                     Actions::EndTurn => {
-                        match &self.the_winner {
+                        match &self.the_winner_key {
                             Some(_) => { self.next_phase(); }
                             None => { self.next_player()?; }
                         }

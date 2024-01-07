@@ -25,7 +25,8 @@ fn initial_state() {
             player_resources: HashMap::new(),
             bugs: HashMap::new(),
             board: GameBoard::new(),
-            the_winner: None,
+            the_winner_key: None,
+            the_winner_name: None,
             has_most_bugs: None,
             has_longest_road: None
         }
@@ -89,7 +90,8 @@ fn should_reset() {
             player_resources: HashMap::new(),
             bugs: HashMap::new(),
             board: GameBoard::new(),
-            the_winner: None,
+            the_winner_key: None,
+            the_winner_name: None,
             has_most_bugs: None,
             has_longest_road: None
         }
@@ -373,7 +375,8 @@ fn should_find_the_winner() {
     let mut game = game_setup();
     game = play_round_one(game);
 
-    assert_eq!(game.the_winner, None);
+    assert_eq!(game.the_winner_key, None);
+    assert_eq!(game.the_winner_name, None);
 
     let player_key = String::from("key1");
     let resources = game.player_resources.get_mut(&player_key).unwrap();
@@ -417,7 +420,8 @@ fn should_find_the_winner() {
     );
     game.process_action(command).unwrap();
 
-    assert_eq!(game.the_winner.unwrap(), String::from("key1"));
+    assert_eq!(game.the_winner_key.unwrap(), String::from("key1"));
+    assert_eq!(game.the_winner_name.unwrap(), String::from("name1"));
     assert_eq!(game.phase, Phase::End);
 
 }
